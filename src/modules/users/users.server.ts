@@ -1,7 +1,8 @@
-import { prisma } from "../../lib/prisma";
+
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { User } from "../../../generated/prisma/client";
+import { prisma } from "../../lib/prisma";
 
 
 const register = async (payload: User) => {
@@ -10,7 +11,7 @@ const register = async (payload: User) => {
   const user = await prisma.user.create({
     data: { ...payload, password: hashPassword },
   });
-
+console.log(user)
 
   return user;
 };

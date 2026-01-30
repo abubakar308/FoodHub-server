@@ -5,6 +5,7 @@ const register: RequestHandler = async (req, res) => {
   const payload = req.body;
 
   const user = await userService.register(payload);
+  console.log(user)
 
   res.send({ message: "Registered Successfully", data: user });
 };
