@@ -13,18 +13,105 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
+enum Role {
+  CUSTOMER
+  PROVIDER
+  ADMIN
 }
 
-model Post {
-  id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  author    User    @relation(fields: [authorId], references: [id])
-  authorId  Int
+enum OrderStatus {
+  PENDING
+  COOKING
+  ON_THE_WAY
+  DELIVERED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+
+  providerProfile ProviderProfile?
+  orders          Order[]
+  reviews         Review[]
+}
+
+model ProviderProfile {
+  id             String  @id @default(uuid())
+  userId         String  @unique
+  restaurantName String
+  address        String
+  phone          String
+  isApproved     Boolean @default(false)
+
+  user   User    @relation(fields: [userId], references: [id])
+  meals  Meal[]
+  orders Order[]
+}
+
+model Category {
+  id   String @id @default(uuid())
+  name String @unique
+
+  meals Meal[]
+}
+
+model Meal {
+  id          String  @id @default(uuid())
+  title       String
+  description String?
+  price       Float
+  imageUrl    String
+  isAvailable Boolean @default(true)
+
+  providerId String
+  categoryId String
+
+  provider ProviderProfile @relation(fields: [providerId], references: [id])
+  category Category        @relation(fields: [categoryId], references: [id])
+
+  reviews    Review[]
+  orderItems OrderItem[]
+}
+
+model Order {
+  id         String      @id @default(uuid())
+  customerId String
+  providerId String
+  status     OrderStatus @default(PENDING)
+  totalPrice Float
+  createdAt  DateTime    @default(now())
+
+  customer User            @relation(fields: [customerId], references: [id])
+  provider ProviderProfile @relation(fields: [providerId], references: [id])
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id       String @id @default(uuid())
+  orderId  String
+  mealId   String
+  quantity Int
+  price    Float
+
+  order Order @relation(fields: [orderId], references: [id])
+  meal  Meal  @relation(fields: [mealId], references: [id])
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  userId String
+  mealId String
+
+  user User @relation(fields: [userId], references: [id])
+  meal Meal @relation(fields: [mealId], references: [id])
 }

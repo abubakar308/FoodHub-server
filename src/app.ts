@@ -1,16 +1,19 @@
 import express from "express";
 import cors  from "cors"
+import userRouter from "./modules/users/users.route";
 
 const app = express();
 
 app.use(cors({
-    origin: process.env.APP_URL || "http://localhost:4000" || "http://localhost:4000"
+    origin:"*"
 }))
 
 app.use(express.json());
+app.use(userRouter);
+
 
 app.get("/",(req, res) =>{
-    res.send("Create a new post")
+    res.send("foodhub server running")
 })
 
 export default app;
