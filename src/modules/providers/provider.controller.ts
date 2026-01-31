@@ -1,23 +1,34 @@
 import { Request, Response } from "express";
+import { providService } from "./provider.service";
 
-const createPost = async (req: Request, res: Response) => {
-    try {
-        const user = req.user;
-        if (!user) {
-            return res.status(400).json({
-                error: "Unauthorized!",
-            })
-        }
-        const result = await postService.createPost(req.body, user.id as string)
-        res.status(201).json(result)
-    } catch (e) {
-        res.status(400).json({
-            error: "Post creation failed",
-            details: e
-        })
+const createProfile = async (req: Request, res: Response) => {
+  try {
+    const { restaurantName, address, phone } = req.body;
+
+    if (!restaurantName || !address) {
+      return res.status(400).json({ message: "Missing fields" });
     }
-}
 
-export const PostController = {
-    createPost
+    const profile = await providService.createProviderProfile(
+      req.user!.id,
+      restaurantName,
+      address,
+      phone
+    );
+
+    return res.status(201).json({
+      success: true,
+      data: profile,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to create profile",
+    });
+  }
+};
+
+
+export const ProviderController = {
+    createProfile
 }

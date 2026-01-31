@@ -1,15 +1,29 @@
 import { prisma } from "../../lib/prisma";
 
-const createPost = async (data: Omit<Post, 'id' | 'createdAt' | 'updatedAt' | 'authorId'>, userId: string) => {
-    const result = await prisma.provider.create({
-        data: {
-            ...data,
-            authorId: userId
-        }
-    })
-    return result;
-}
+const createProviderProfile = async (
+  userId: string,
+  restaurantName: string,
+  address: string,
+  phone: string
+) => {
+  const existingProfile = await prisma.providerProfile.findUnique({
+    where: { userId },
+  });
 
-export const postService = {
-    createPost
+  if (existingProfile) {
+    throw new Error("PROVIDER_PROFILE_EXISTS");
+  }
+  return prisma.providerProfile.create({
+    data: {
+      userId,
+      restaurantName,
+      address,
+      phone
+    },
+  });
+};
+
+
+export const providService = {
+    createProviderProfile
 }

@@ -1,13 +1,12 @@
-import express, { Router } from 'express';
-import { PostController } from './post.controller';
-import auth, { UserRole } from '../../middlewares/auth';
+import { Router } from 'express';
+import { Role } from '../../../generated/prisma/enums';
+import auth from '../../middleware/auth';
+import { ProviderController } from './provider.controller';
 
-const router = express.Router();
+const providerRouter = Router()
+// PROVIDER
 
-router.post(
-    "/",
-    auth(UserRole.USER),
-    PostController.createPost
-)
+providerRouter.post("/provider/profile", auth(Role.PROVIDER), ProviderController.createProfile)
 
-export const postRouter: Router = router;
+
+export default providerRouter;
