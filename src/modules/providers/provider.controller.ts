@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { providService } from "./provider.service";
+import { ProviderService } from "./provider.service";
+
 
 const createProfile = async (req: Request, res: Response) => {
   try {
@@ -9,7 +10,7 @@ const createProfile = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Missing fields" });
     }
 
-    const profile = await providService.createProviderProfile(
+    const profile = await ProviderService.createProviderProfile(
       req.user!.id,
       restaurantName,
       address,
@@ -29,7 +30,7 @@ const createProfile = async (req: Request, res: Response) => {
 };
 
 const getMyProfile = async (req: Request, res: Response) => {
-  const profile = await providService.getMyProviderProfile(req.user!.id);
+  const profile = await ProviderService.getMyProviderProfile(req.user!.id);
 
   if (!profile) {
     return res.status(404).json({ message: "Profile not found" });
@@ -40,12 +41,12 @@ const getMyProfile = async (req: Request, res: Response) => {
 
 
 const getProviders = async (_req: Request, res: Response) => {
-  const providers = await providService.getAllProviders();
+  const providers = await ProviderService.getAllProviders();
   res.json({ success: true, data: providers });
 };
 
 const getProvider = async (req: Request, res: Response) => {
-  const provider = await providService.getProviderById(
+  const provider = await ProviderService.getProviderById(
     req.params.id as string,
   );
 
@@ -56,9 +57,47 @@ const getProvider = async (req: Request, res: Response) => {
   res.json({ success: true, data: provider });
 };
 
+
+// orders
+const getOrders = async (req: Request, res: Response) => {
+  const profile = await ProviderService.getMyProviderProfile(req.user!.id);
+
+  if (!profile) {
+    return res.status(403).json({ message: "No provider profile" });
+  }
+
+  const orders = await ProviderService.getProviderOrders(profile.id);
+  res.json({ success: true, data: orders });
+};
+
+//  update order status
+const updateOrderStatus = async (req: Request, res: Response) => {
+  const { status } = req.body;
+
+  const profile = await ProviderService.getMyProviderProfile(req.user!.id);
+  if (!profile) {
+    return res.status(403).json({ message: "No provider profile" });
+  }
+
+  const result = await ProviderService.updateOrderStatus(
+    req.params.id as string,
+    profile.id,
+    status,
+  );
+
+  // if (result.count === 0) {
+  //   return res.status(403).json({ message: "Not allowed" });
+  // }
+
+  res.json({ success: true, data: result });
+};
+
+
 export const ProviderController = {
     createProfile,
     getMyProfile,
     getProviders,
-    getProvider
+    getProvider,
+    getOrders,
+    updateOrderStatus
 }
