@@ -12,7 +12,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use("/api/auth", userRouter);
-app.use("/provider", providerRouter)
+app.use("/providers", providerRouter)
 
 
 app.get("/",(req, res) =>{

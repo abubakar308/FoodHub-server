@@ -39,7 +39,26 @@ const getMyProfile = async (req: Request, res: Response) => {
 };
 
 
+const getProviders = async (_req: Request, res: Response) => {
+  const providers = await providService.getAllProviders();
+  res.json({ success: true, data: providers });
+};
+
+const getProvider = async (req: Request, res: Response) => {
+  const provider = await providService.getProviderById(
+    req.params.id as string,
+  );
+
+  if (!provider) {
+    return res.status(404).json({ message: "Provider not found" });
+  }
+
+  res.json({ success: true, data: provider });
+};
+
 export const ProviderController = {
     createProfile,
-    getMyProfile
+    getMyProfile,
+    getProviders,
+    getProvider
 }

@@ -4,7 +4,8 @@ import auth from '../../middleware/auth';
 import { ProviderController } from './provider.controller';
 
 const router = Router()
-// PROVIDER
+router.get("/", ProviderController.getProviders);
+router.get("/:id", ProviderController.getProvider);
 
 router.post("/profile", auth(Role.PROVIDER), ProviderController.createProfile)
 router.get("/dashboard", auth(Role.PROVIDER), ProviderController.getMyProfile)

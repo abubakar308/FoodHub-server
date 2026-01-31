@@ -33,7 +33,29 @@ const getMyProviderProfile = async (userId: string) => {
   });
 };
 
+const getAllProviders = async () => {
+  return prisma.providerProfile.findMany({
+    select: {
+      id: true,
+      restaurantName: true,
+      address: true,
+      phone: true
+    },
+  });
+};
+
+const getProviderById = async (id: string) => {
+  return prisma.providerProfile.findUnique({
+    where: { id },
+    include: {
+      meals: true,
+    },
+  });
+};
+
 export const providService = {
     createProviderProfile,
-    getMyProviderProfile
+    getMyProviderProfile,
+    getAllProviders,
+    getProviderById
 }
