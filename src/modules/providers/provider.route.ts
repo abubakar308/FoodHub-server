@@ -3,10 +3,11 @@ import { Role } from '../../../generated/prisma/enums';
 import auth from '../../middleware/auth';
 import { ProviderController } from './provider.controller';
 
-const providerRouter = Router()
+const router = Router()
 // PROVIDER
 
-providerRouter.post("/provider/profile", auth(Role.PROVIDER), ProviderController.createProfile)
+router.post("/profile", auth(Role.PROVIDER), ProviderController.createProfile)
+router.get("/dashboard", auth(Role.PROVIDER), ProviderController.getMyProfile)
 
 
-export default providerRouter;
+export const providerRouter: Router = router;

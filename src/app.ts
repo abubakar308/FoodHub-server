@@ -1,7 +1,7 @@
 import express from "express";
 import cors  from "cors"
-import userRouter from "./modules/users/users.route";
-import providerRouter from "./modules/providers/provider.route";
+import { userRouter } from "./modules/users/users.route";
+import { providerRouter } from "./modules/providers/provider.route";
 
 const app = express();
 
@@ -10,8 +10,9 @@ app.use(cors({
 }))
 
 app.use(express.json());
-app.use(userRouter);
-app.use(providerRouter)
+
+app.use("/api/auth", userRouter);
+app.use("/provider", providerRouter)
 
 
 app.get("/",(req, res) =>{

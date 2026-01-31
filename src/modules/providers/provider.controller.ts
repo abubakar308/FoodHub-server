@@ -28,7 +28,18 @@ const createProfile = async (req: Request, res: Response) => {
   }
 };
 
+const getMyProfile = async (req: Request, res: Response) => {
+  const profile = await providService.getMyProviderProfile(req.user!.id);
+
+  if (!profile) {
+    return res.status(404).json({ message: "Profile not found" });
+  }
+
+  res.json({ success: true, data: profile });
+};
+
 
 export const ProviderController = {
-    createProfile
+    createProfile,
+    getMyProfile
 }

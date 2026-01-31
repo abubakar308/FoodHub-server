@@ -24,6 +24,16 @@ const createProviderProfile = async (
 };
 
 
+const getMyProviderProfile = async (userId: string) => {
+  return prisma.providerProfile.findUnique({
+    where: { userId },
+    include: {
+      meals: true,
+    },
+  });
+};
+
 export const providService = {
-    createProviderProfile
+    createProviderProfile,
+    getMyProviderProfile
 }
