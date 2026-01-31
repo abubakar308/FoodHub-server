@@ -54,7 +54,7 @@ model ProviderProfile {
   restaurantName String
   address        String
   phone          String
-  
+
   user   User    @relation(fields: [userId], references: [id])
   meals  Meal[]
   orders Order[]

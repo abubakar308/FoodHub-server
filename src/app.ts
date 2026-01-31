@@ -2,6 +2,8 @@ import express from "express";
 import cors  from "cors"
 import { userRouter } from "./modules/users/users.route";
 import { providerRouter } from "./modules/providers/provider.route";
+import { MealRouter } from "./modules/meals/meal.route";
+import { categoryRoutes } from "./modules/category/category.router";
 
 const app = express();
 
@@ -12,7 +14,9 @@ app.use(cors({
 app.use(express.json());
 
 app.use("/api/auth", userRouter);
-app.use("/providers", providerRouter)
+app.use("/providers", providerRouter);
+app.use("/", MealRouter)
+app.use("/", categoryRoutes)
 
 
 app.get("/",(req, res) =>{
