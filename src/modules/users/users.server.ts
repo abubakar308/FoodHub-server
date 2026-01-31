@@ -3,18 +3,25 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { User } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
+import config from "../../config";
 
 
 const register = async (payload: User) => {
+
+      if (!["CUSTOMER", "PROVIDER"].includes(payload.role)) {
+    throw new Error("Only CUSTOMER and PROVIDER can register");
+  }
+
   const hashPassword = await bcrypt.hash(payload.password, 10);
 
   const user = await prisma.user.create({
     data: { ...payload, password: hashPassword },
   });
-console.log(user)
 
   return user;
+
 };
+
 
 const login = async (email: string, password: string) => {
   const user = await prisma.user.findUnique({ where: { email } });
@@ -23,11 +30,27 @@ const login = async (email: string, password: string) => {
   const matchPass = await bcrypt.compare(password, user.password);
   if (!matchPass) throw new Error("Invalid Password");
 
-  const token = jwt.sign({ id: user.id, role: user.role }, "very secret", {
-    expiresIn: "7d",
-  });
+  const token = jwt.sign(
+    { id: user.id, role: user.role },
+    config.jwtSecret as string,
+    { expiresIn: "7d" }
+  );
 
   return token;
 };
 
-export const userService = { register, login };
+export const getProfile = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { providerProfile: true },
+  });
+
+  if (!user) throw new Error("User not found");
+  return user;
+};
+
+export const userService = {
+   register,
+    login,
+    getProfile
+  };

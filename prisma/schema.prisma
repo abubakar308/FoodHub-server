@@ -20,20 +20,28 @@ enum Role {
 }
 
 enum OrderStatus {
-  PENDING
-  COOKING
-  ON_THE_WAY
+  PLACED
+  PREPARING
+  READY
+  DELIVERING
   DELIVERED
   CANCELLED
 }
 
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
 model User {
-  id        String   @id @default(uuid())
+  id        String     @id @default(uuid())
   name      String
-  email     String   @unique
+  email     String     @unique
   password  String
   role      Role
-  createdAt DateTime @default(now())
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   providerProfile ProviderProfile?
   orders          Order[]
@@ -61,12 +69,14 @@ model Category {
 }
 
 model Meal {
-  id          String  @id @default(uuid())
+  id          String   @id @default(uuid())
   title       String
   description String?
   price       Float
   imageUrl    String
-  isAvailable Boolean @default(true)
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   providerId String
   categoryId String
@@ -82,9 +92,10 @@ model Order {
   id         String      @id @default(uuid())
   customerId String
   providerId String
-  status     OrderStatus @default(PENDING)
+  status     OrderStatus @default(PLACED)
   totalPrice Float
   createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   customer User            @relation(fields: [customerId], references: [id])
   provider ProviderProfile @relation(fields: [providerId], references: [id])
@@ -114,4 +125,6 @@ model Review {
 
   user User @relation(fields: [userId], references: [id])
   meal Meal @relation(fields: [mealId], references: [id])
+
+  @@unique([userId, mealId])
 }
