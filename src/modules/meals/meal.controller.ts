@@ -4,20 +4,16 @@ import { prisma } from "../../lib/prisma";
 
 const createMeal = async (req: Request, res: Response) => {
   try {
-    
-const { title, description, price, imageUrl, categoryId } = req.body;
+
+    const { title, description, price, imageUrl, categoryId } = req.body;
 
     if (!title || !price || !categoryId) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-
-    const providerProfile = await prisma.providerProfile.findUnique({
+  const providerProfile = await prisma.providerProfile.findUnique({
       where: { userId: req.user!.id },
     });
-
-
-
     if (!providerProfile) {
       return res.status(403).json({ message: "Provider profile not found" });
     }
@@ -28,15 +24,16 @@ const { title, description, price, imageUrl, categoryId } = req.body;
       price,
       imageUrl,
       categoryId,
-      providerId: providerProfile.id,
+      providerId: providerProfile.id
     });
 
-    res.status(201).json({ 
+    res.status(201).json({
       success: true,
       message: "mail create successfull",
-       data: meal });
+      data: meal
+    });
   } catch (error: any) {
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: "Failed to create meal",
       error: error.message
@@ -71,10 +68,10 @@ const getMeal = async (req: Request, res: Response) => {
 
 // update own meal
 const updateMeal = async (req: Request, res: Response) => {
-   try {
+  try {
     const mealId = req.params.id;
-    const user  = req.user
-    
+    const user = req.user
+
     const result = await MealService.updateMeal(mealId as string, req.body, user?.id as string)
     res.status(200).json({
       success: true,
@@ -82,7 +79,7 @@ const updateMeal = async (req: Request, res: Response) => {
       data: result
     })
   } catch (error: any) {
-  res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: "Failed to create meal",
       error: error.message
@@ -92,23 +89,40 @@ const updateMeal = async (req: Request, res: Response) => {
 
 // delete own meal
 const deleteMeal = async (req: Request, res: Response) => {
-  const result = await MealService.deleteMeal(
-    req.params.id as string,
-    req.user!.id,
-  );
 
-  if (result.count === 0) {
-    return res.status(403).json({ message: "Not allowed" });
+  try {
+
+    const mealid = req.params.id as string;
+    const userId = req.user.id;
+
+    const result = await MealService.deleteMeal( mealid, userId );
+
+    
+    const provider = await prisma.providerProfile.findUnique({
+  where: { userId: req.user.id }
+});
+
+if (!provider) throw new Error("Provider not found");
+    
+  res.status(200).json({ 
+      success: true,
+      message: "meal delete successfull",
+       data: result });
+
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: "Meal delation failed",
+      error: error.message
+    });
   }
-
-  res.json({ success: true });
 };
 
 export const MealController = {
-    createMeal,
-    getMeals,
-    getMeal,
-    updateMeal,
-    deleteMeal
+  createMeal,
+  getMeals,
+  getMeal,
+  updateMeal,
+  deleteMeal
 
 }

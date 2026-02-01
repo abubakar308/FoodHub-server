@@ -14,7 +14,7 @@ app.use(cors({
 app.use(express.json());
 
 app.use("/api/auth", userRouter);
-app.use("/providers", providerRouter);
+app.use("/", providerRouter);
 app.use("/", MealRouter)
 app.use("/", categoryRoutes)
 

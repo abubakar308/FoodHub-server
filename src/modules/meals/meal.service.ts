@@ -61,9 +61,31 @@ const updateMeal = async (mealId: string, data: Partial<Meal>, userId: string) =
 };
 
 
-const deleteMeal = async (mealId: string, providerId: string) => {
-  return prisma.meal.deleteMany({
-    where: { id: mealId, providerId },
+const deleteMeal = async (mealId: string, userId: string) => {
+
+  const mealData = await prisma.meal.findUniqueOrThrow({
+        where: {
+            id: mealId
+        },
+        select: {
+            id: true,
+            providerId: true
+        }
+    })
+
+    if (!mealData) throw new Error("Meal not found");
+
+
+      const provider = await prisma.providerProfile.findUnique({
+    where: { userId }
+  });
+
+    if (mealData.providerId !== provider?.id) {
+    throw new Error("Unauthorized delete");
+  }
+
+  return prisma.meal.delete({
+    where: { id: mealId },
   });
 };
 

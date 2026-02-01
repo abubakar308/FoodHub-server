@@ -11,7 +11,7 @@ const createProfile = async (req: Request, res: Response) => {
     }
 
     const profile = await ProviderService.createProviderProfile(
-      req.user!.id,
+      req.user.id,
       restaurantName,
       address,
       phone
@@ -30,6 +30,7 @@ const createProfile = async (req: Request, res: Response) => {
 };
 
 const getMyProfile = async (req: Request, res: Response) => {
+  console.log(req.user)
   const profile = await ProviderService.getMyProviderProfile(req.user!.id);
 
   if (!profile) {
@@ -39,16 +40,18 @@ const getMyProfile = async (req: Request, res: Response) => {
   res.json({ success: true, data: profile });
 };
 
-
 const getProviders = async (_req: Request, res: Response) => {
   const providers = await ProviderService.getAllProviders();
   res.json({ success: true, data: providers });
 };
 
+
 const getProvider = async (req: Request, res: Response) => {
   const provider = await ProviderService.getProviderById(
     req.params.id as string,
   );
+
+  console.log(provider)
 
   if (!provider) {
     return res.status(404).json({ message: "Provider not found" });

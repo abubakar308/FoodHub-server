@@ -8,7 +8,7 @@ const router = Router();
 
 // PUBLIC
 router.get("/meals", MealController.getMeals);
-router.get("/meals/:id", MealController.getMeal);
+router.get("/meal/:id", MealController.getMeal);
 
 router.post(
   "/provider/meals",
