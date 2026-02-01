@@ -4,6 +4,7 @@ import { userRouter } from "./modules/users/users.route";
 import { providerRouter } from "./modules/providers/provider.route";
 import { MealRouter } from "./modules/meals/meal.route";
 import { categoryRoutes } from "./modules/category/category.router";
+import { orderRoutes } from "./modules/orders/order.router";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use("/api/auth", userRouter);
 app.use("/", providerRouter);
 app.use("/", MealRouter)
 app.use("/", categoryRoutes)
+app.use("/api/orders", orderRoutes)
 
 
 app.get("/",(req, res) =>{

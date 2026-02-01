@@ -92,6 +92,7 @@ model Order {
   customerId String
   providerId String
   status     OrderStatus @default(PLACED)
+  address   String
   totalPrice Float
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
