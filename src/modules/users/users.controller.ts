@@ -4,52 +4,44 @@ import { prisma } from "../../lib/prisma";
 
 const register: RequestHandler = async (req, res) => {
 
-    try{
-         const payload = req.body;
-          const user = await userService.register(payload);
+  try {
+    const payload = req.body;
+    const user = await userService.register(payload);
 
- res.status(201).json({
-    success: true,
-    message: "Register successfull",
-    data: user
-  })
-    } catch(error: any){
-         res.status(400).json({
-            secces: false,
-            error: "Registration failed",
-            details: error.message
-        })
-    }
+    res.status(201).json({
+      success: true,
+      message: "Register successfull",
+      data: user
+    })
+  } catch (error: any) {
+    res.status(400).json({
+      secces: false,
+      error: "Registration failed",
+      details: error.message
+    })
+  }
 }
 
 const login: RequestHandler = async (req, res) => {
 
-  const { email, password } = req.body;
-  const token = await userService.login(email, password);
-  res.send({ message: "Logged in successfully", token });
+  try {
+    const { email, password } = req.body;
+    const data = await userService.login(email, password);
+
+    res.status(200).json({
+      message: "Logged in successfully",
+      data: data
+    })
+  } catch (error: any) {
+res.status(400).json({
+      secces: false,
+      error: "Login failed",
+      details: error.message
+    })
+  }
 
 };
 
-
-// const getProfile: RequestHandler = async (req, res) => {
-
-//     try{
-//          const payload = req.body;
-//           const user = await userService.getProfile(payload);
-
-//  res.status(200).json({
-//     success: true,
-//     message: "profile fetch successfully",
-//     data: user
-//   })
-//     } catch(error: any){
-//          res.status(400).json({
-//             secces: false,
-//             error: "Profile fetch failed",
-//             details: error.message
-//         })
-//     }
-// }
 
 export const getProfile: RequestHandler = async (req, res) => {
   try {

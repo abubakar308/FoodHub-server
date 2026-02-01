@@ -36,7 +36,7 @@ const login = async (email: string, password: string) => {
     { expiresIn: "7d" }
   );
 
-  return token;
+  return {user, token};
 };
 
 export const getProfile = async (userId: string) => {
