@@ -26,4 +26,44 @@ const createOrder = async (req: Request, res: Response) => {
   }
 };
 
-export const OrderController = { createOrder, };
+const getMyOrders = async (req: Request, res: Response) => {
+  try {
+
+    console.log(req.user)
+    const orders = await OrderServices.getCustomerOrders(req.user!.id);
+
+    res.json({
+      success: true,
+      data: orders,
+    });
+  } catch {
+    res.status(500).json({ 
+      message: "Failed to fetch orders" 
+    });
+  }
+};
+
+
+const getOrderById = async (req: Request, res: Response) => {
+  try {
+    const order = await OrderServices.getOrderById(
+      req.user!.id,
+      req.params.id as string,
+    );
+
+    res.json({
+      success: true,
+      data: order,
+    });
+  } catch (error: any) {
+    res.status(404).json({
+      message: error.message || "Order not found",
+    });
+  }
+};
+
+export const OrderController = { 
+  createOrder, 
+  getMyOrders,
+  getOrderById
+};

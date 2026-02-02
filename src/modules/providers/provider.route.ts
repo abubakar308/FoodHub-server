@@ -11,13 +11,13 @@ router.post("/provider/profile", auth(Role.PROVIDER), ProviderController.createP
 router.get("/provider/dashboard", auth(Role.PROVIDER), ProviderController.getMyProfile);
 
 router.get(
-  "/orders",
+  "/provider/orders",
   auth(Role.PROVIDER),
   ProviderController.getOrders,
 );
 
 router.patch(
-  "/orders/:id",
+  "/provider/orders/:id",
   auth(Role.PROVIDER),
   ProviderController.updateOrderStatus,
 );

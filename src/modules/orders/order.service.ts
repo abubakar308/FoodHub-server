@@ -69,7 +69,44 @@ const createOrder = async(customerId: string,
   });
 
 }
+// Get customer orders
+const getCustomerOrders = async (customerId: string) => {
+  console.log(customerId)
+  return prisma.order.findMany({
+    where: { customerId },
+    include: {
+      items: { include: { meal: true } },
+      provider: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+};
+
+
+// Get order by id
+const getOrderById = async (customerId: string, orderId: string) => {
+  const order = await prisma.order.findFirst({
+    where: {
+      id: orderId,
+      customerId,
+    },
+    include: {
+      items: { include: { meal: true } },
+      provider: true,
+    },
+  });
+
+  if (!order) {
+    throw new Error("Order not found");
+  }
+
+  return order;
+};
+
+
 
 export const OrderServices = {
-    createOrder
+    createOrder,
+    getCustomerOrders,
+    getOrderById
 }

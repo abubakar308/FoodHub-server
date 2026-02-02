@@ -25,9 +25,6 @@ const createProviderProfile = async (
 
 
 const getMyProviderProfile = async (userId: string) => {
-
-  console.log(userId)
-  
   return prisma.providerProfile.findUnique({
     where: { userId },
     include: {

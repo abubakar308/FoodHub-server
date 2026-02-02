@@ -49,8 +49,8 @@ model User {
 }
 
 model ProviderProfile {
-  id             String  @id @default(uuid())
-  userId         String  @unique
+  id             String @id @default(uuid())
+  userId         String @unique
   restaurantName String
   address        String
   phone          String
@@ -92,7 +92,7 @@ model Order {
   customerId String
   providerId String
   status     OrderStatus @default(PLACED)
-  address   String
+  address    String
   totalPrice Float
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt

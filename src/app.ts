@@ -15,10 +15,10 @@ app.use(cors({
 app.use(express.json());
 
 app.use("/api/auth", userRouter);
-app.use("/", providerRouter);
-app.use("/", MealRouter)
-app.use("/", categoryRoutes)
-app.use("/api/orders", orderRoutes)
+app.use("/api", providerRouter);
+app.use("/api", MealRouter)
+app.use("/api", categoryRoutes)
+app.use("/api", orderRoutes)
 
 
 app.get("/",(req, res) =>{
