@@ -71,7 +71,7 @@ const getProviderOrders = async (providerId: string) => {
 const updateOrderStatus = async (
   orderId: string,
   providerId: string,
-  status: "PREPARING" | "READY" | "DELIVERED",
+  status: "PREPARING" | "READY" | "DELIVERING" | "DELIVERED",
 ) => {
   const order = await prisma.order.findFirst({
     where: {

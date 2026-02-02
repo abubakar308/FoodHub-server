@@ -30,7 +30,7 @@ const createProfile = async (req: Request, res: Response) => {
 };
 
 const getMyProfile = async (req: Request, res: Response) => {
-  console.log(req.user)
+  console.log("provider", req.user)
   const profile = await ProviderService.getMyProviderProfile(req.user!.id);
 
   if (!profile) {
@@ -51,8 +51,6 @@ const getProvider = async (req: Request, res: Response) => {
     req.params.id as string,
   );
 
-  console.log(provider)
-
   if (!provider) {
     return res.status(404).json({ message: "Provider not found" });
   }
@@ -65,11 +63,14 @@ const getProvider = async (req: Request, res: Response) => {
 const getOrders = async (req: Request, res: Response) => {
   const profile = await ProviderService.getMyProviderProfile(req.user!.id);
 
+  console.log(profile)
+
   if (!profile) {
     return res.status(403).json({ message: "No provider profile" });
   }
 
   const orders = await ProviderService.getProviderOrders(profile.id);
+  console.log(orders)
   res.json({ success: true, data: orders });
 };
 

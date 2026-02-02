@@ -8,16 +8,16 @@ router.get("/providers", ProviderController.getProviders);
 router.get("/provider/:id", ProviderController.getProvider);
 
 router.post("/provider/profile", auth(Role.PROVIDER), ProviderController.createProfile);
-router.get("/provider/dashboard", auth(Role.PROVIDER), ProviderController.getMyProfile);
+router.get("/providers/dashboard", auth(Role.PROVIDER), ProviderController.getMyProfile);
 
 router.get(
-  "/provider/orders",
+  "/providers/orders",
   auth(Role.PROVIDER),
   ProviderController.getOrders,
 );
 
 router.patch(
-  "/provider/orders/:id",
+  "/provider/order/:id",
   auth(Role.PROVIDER),
   ProviderController.updateOrderStatus,
 );
