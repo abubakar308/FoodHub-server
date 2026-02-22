@@ -31,7 +31,7 @@ const login = async (email: string, password: string) => {
   if (!matchPass) throw new Error("Invalid Password");
 
   const token = jwt.sign(
-    { id: user.id, role: user.role },
+    { id: user.id, email: user.email, role: user.role },
     config.jwtSecret as string,
     { expiresIn: "7d" }
   );

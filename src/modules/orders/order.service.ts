@@ -5,20 +5,17 @@ type OrderItemInput = {
   quantity: number;
 };
 
-const createOrder = async(customerId: string,
+const createOrder = async (customerId: string,
   items: OrderItemInput[],
-  address: string,) =>{
+  address: string,) => {
 
-
-    // fetch meals
+  // fetch meals
   const meals = await prisma.meal.findMany({
     where: {
       id: { in: items.map((i) => i.mealId) },
     },
     include: { provider: true },
   });
-
-  console.log(meals)
 
   if (meals.length !== items.length) {
     throw new Error("Invalid meal selected");
@@ -69,6 +66,10 @@ const createOrder = async(customerId: string,
   });
 
 }
+
+
+
+
 // Get customer orders
 const getCustomerOrders = async (customerId: string) => {
   console.log(customerId)
@@ -106,7 +107,7 @@ const getOrderById = async (customerId: string, orderId: string) => {
 
 
 export const OrderServices = {
-    createOrder,
-    getCustomerOrders,
-    getOrderById
+  createOrder,
+  getCustomerOrders,
+  getOrderById
 }

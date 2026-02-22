@@ -9,10 +9,12 @@ import { adminRouter } from "./modules/admin/admin.router";
 
 const app = express();
 
-app.use(cors({
-    origin:"*"
-}))
-
+app.use(
+  cors({
+    origin: "http://localhost:3000", // frontend URL
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 app.use("/api/auth", userRouter);

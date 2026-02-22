@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../config";
+import { prisma } from "../lib/prisma";
 
 declare global {
   namespace Express {
@@ -11,7 +12,7 @@ declare global {
 }
 
 const auth = (...roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
 
     const authHeader = req.headers.authorization;
 
@@ -28,13 +29,25 @@ const auth = (...roles: string[]) => {
 
       req.user = decoded;
 
+      const userData = await prisma.user.findUnique({
+        where:{
+          email:decoded.email
+        }
+      });
+
+      console.log(userData)
+
       if (roles.length && !roles.includes(decoded.role)) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
+         if(userData?.status !== "ACTIVE") {
+        throw new Error("Unauthorized!!");
+      }
+
       next();
-    } catch {
-      return res.status(401).json({ message: "Invalid token" });
+    } catch(errror: any) {
+      return res.status(401).json({ message:  errror.message});
     }
   };
 };
