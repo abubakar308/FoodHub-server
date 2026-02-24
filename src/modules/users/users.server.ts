@@ -1,9 +1,9 @@
 
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { User } from "../../../generated/prisma/client";
 import { prisma } from "../../lib/prisma";
 import config from "../../config";
+import { User } from "../../../generated/prisma/client";
 
 
 const register = async (payload: User) => {
@@ -12,7 +12,7 @@ const register = async (payload: User) => {
     throw new Error("Only CUSTOMER and PROVIDER can register");
   }
 
-  const hashPassword = await bcrypt.hash(payload.password, 10);
+  const hashPassword = await bcrypt.hash(payload.password, 8);
 
   const user = await prisma.user.create({
     data: { ...payload, password: hashPassword },

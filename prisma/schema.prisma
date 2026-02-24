@@ -45,6 +45,7 @@ model User {
   providerProfile ProviderProfile?
   orders          Order[]
   reviews         Review[]
+  carts           Cart[]
 }
 
 model ProviderProfile {
@@ -71,7 +72,7 @@ model Meal {
   title       String
   description String?
   price       Float
-  imageUrl    String
+  imageUrl    String?
   isAvailable Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -84,6 +85,29 @@ model Meal {
 
   reviews    Review[]
   orderItems OrderItem[]
+  cartItems  CartItem[]
+}
+
+model Cart {
+  id         String   @id @default(uuid())
+  customerId String
+  createdAt  DateTime @default(now())
+
+  customer User @relation(fields: [customerId], references: [id])
+
+  items CartItem[]
+}
+
+model CartItem {
+  id             String  @id @default(uuid())
+  cartId         String
+  mealId         String
+  providerId     String
+  quantity       Int
+  priceAtAddTime Decimal @db.Decimal(10, 2)
+
+  cart Cart @relation(fields: [cartId], references: [id])
+  meal Meal @relation(fields: [mealId], references: [id])
 }
 
 model Order {

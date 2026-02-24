@@ -2,6 +2,27 @@ import { Request, Response } from "express";
 import { OrderServices } from "./order.service";
 
 
+const addToCart = async (req: Request, res: Response) => {
+  try {
+    const customerId = req.user.id; // from auth middleware
+    const { mealId, quantity } = req.body;
+
+    const result = await OrderServices.addToCart(customerId, mealId, quantity);
+
+    res.status(200).json({
+      success: true,
+      message: "Added to cart",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
 const createOrder = async (req: Request, res: Response) => {
   try {
 
@@ -63,6 +84,7 @@ const getOrderById = async (req: Request, res: Response) => {
 };
 
 export const OrderController = { 
+  addToCart,
   createOrder, 
   getMyOrders,
   getOrderById

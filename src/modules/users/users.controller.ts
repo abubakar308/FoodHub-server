@@ -1,17 +1,20 @@
 import { RequestHandler } from "express";
 import { userService } from "./users.server";
+import sendResponse from "../../utils/sendResponse";
 
 const register: RequestHandler = async (req, res) => {
 
   try {
     const payload = req.body;
-    const user = await userService.register(payload);
+    const result = await userService.register(payload);
 
-    res.status(201).json({
+    sendResponse(res, {
+      statusCode: 201,
       success: true,
       message: "Register successfull",
-      data: user
+      data: result,
     })
+
   } catch (error: any) {
     res.status(400).json({
       secces: false,
@@ -25,20 +28,21 @@ const login: RequestHandler = async (req, res) => {
 
   try {
     const { email, password } = req.body;
-    const data = await userService.login(email, password);
+    const result = await userService.login(email, password);
 
-        res.cookie("token", data.token, {
+       res.cookie("token", result.token, {
+      secure: false,
       httpOnly: true,
-      secure: false,        // localhost এ false
-      sameSite: "none",     // 🔥 cross origin এর জন্য MUST
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "strict", // none / strict / lax
     });
 
-    res.status(200).json({
+     sendResponse(res, {
+      statusCode: 201,
       success: true,
-      message: "Logged in successfully",
-      data: data
+      message: "LogedIn successfull",
+      data: result,
     })
+
   } catch (error: any) {
 res.status(400).json({
       seccess: false,
