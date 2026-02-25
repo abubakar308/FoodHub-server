@@ -1,4 +1,3 @@
-
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { prisma } from "../../lib/prisma";
@@ -39,7 +38,8 @@ const login = async (email: string, password: string) => {
   return {user, token};
 };
 
-export const getProfile = async (userId: string) => {
+
+const getProfile = async (userId: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     include: { providerProfile: true },
@@ -48,6 +48,7 @@ export const getProfile = async (userId: string) => {
   if (!user) throw new Error("User not found");
   return user;
 };
+
 
 export const userService = {
    register,

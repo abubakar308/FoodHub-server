@@ -4,10 +4,17 @@ import { OrderServices } from "./order.service";
 
 const addToCart = async (req: Request, res: Response) => {
   try {
-    const customerId = req.user.id; // from auth middleware
-    const { mealId, quantity } = req.body;
+    const customerId = req.user!.id;
+    const { mealId } = req.body;
 
-    const result = await OrderServices.addToCart(customerId, mealId, quantity);
+    if (!mealId) {
+      return res.status(400).json({
+        success: false,
+        message: "mealId is required",
+      });
+    }
+
+    const result = await OrderServices.addToCart(customerId, mealId);
 
     res.status(200).json({
       success: true,
@@ -23,34 +30,104 @@ const addToCart = async (req: Request, res: Response) => {
 };
 
 
+const getMyCart = async (req: Request, res: Response) => {
+  try {
+    const customerId = req.user.id;
+
+    const cart = await OrderServices.getMyCart(customerId);
+
+    res.status(200).json({
+      success: true,
+      data: cart,
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const updateQuantity = async (req: Request, res: Response) => {
+  try {
+    const cartItemId = req.params.id;
+    const { quantity } = req.body;
+    const customerId = req.user!.id;
+
+    const result = await OrderServices.updateQuantity(
+      customerId,
+      cartItemId as string,
+      quantity
+    );
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (err: any) {
+    res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+
+// const createOrder = async (req: Request, res: Response) => {
+//   try {
+
+//     const { items, address } = req.body;
+
+//     if (!items || !items.length || !address) {
+//       return res.status(400).json({
+//         message: "Items and address are required",
+//       });
+//     }
+
+//     const order = await OrderServices.createOrder(req.user!.id, items, address);
+
+//     res.status(201).json({
+//       success: true,
+//       data: order,
+//     });
+//   } catch (error: any) {
+//     res.status(400).json({
+//       message: error.message || "Failed to create order",
+//     });
+//   }
+// };
+
 const createOrder = async (req: Request, res: Response) => {
   try {
+    const customerId = req.user!.id;
+    const { address } = req.body;
 
-    const { items, address } = req.body;
-
-    if (!items || !items.length || !address) {
+    if (!address) {
       return res.status(400).json({
-        message: "Items and address are required",
+        success: false,
+        message: "Address is required",
       });
     }
 
-    const order = await OrderServices.createOrder(req.user!.id, items, address);
+    const order = await OrderServices.createOrder(customerId, address);
 
     res.status(201).json({
       success: true,
+      message: "Order placed successfully",
       data: order,
     });
   } catch (error: any) {
     res.status(400).json({
+      success: false,
       message: error.message || "Failed to create order",
     });
   }
 };
 
+
 const getMyOrders = async (req: Request, res: Response) => {
   try {
 
-    console.log(req.user)
     const orders = await OrderServices.getCustomerOrders(req.user!.id);
 
     res.json({
@@ -85,6 +162,8 @@ const getOrderById = async (req: Request, res: Response) => {
 
 export const OrderController = { 
   addToCart,
+  getMyCart,
+  updateQuantity,
   createOrder, 
   getMyOrders,
   getOrderById

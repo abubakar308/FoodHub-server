@@ -6,7 +6,10 @@ import { OrderController } from "./order.controller";
 
 const router = Router();
 
-router.post("/add", auth(Role.CUSTOMER), OrderController.addToCart);
+router.post("/addtocart", auth(Role.CUSTOMER), OrderController.addToCart);
+router.get("/mycart", auth(Role.CUSTOMER), OrderController.getMyCart);
+router.patch("/cart/:id", auth(Role.CUSTOMER), OrderController.updateQuantity)
+
 router.post("/orders", auth(Role.CUSTOMER), OrderController.createOrder);
 router.get("/orders", auth(Role.CUSTOMER), OrderController.getMyOrders);
 router.get("/order/:id", auth(Role.CUSTOMER), OrderController.getOrderById);
