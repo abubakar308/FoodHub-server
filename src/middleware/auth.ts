@@ -21,7 +21,7 @@ const auth = (...roles: string[]) => {
       return res.status(401).json({ message: "Token required" });
     }
 
-    const token = authHeader.startsWith("Bearer ")
+    const token = authHeader.startsWith("Bearer")
       ? authHeader.split(" ")[1]
       : authHeader;
 
@@ -36,7 +36,6 @@ const auth = (...roles: string[]) => {
         }
       });
 
-      console.log(userData)
 
       if (roles.length && !roles.includes(decoded.role)) {
         return res.status(403).json({ message: "Forbidden" });

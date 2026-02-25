@@ -90,7 +90,7 @@ model Meal {
 
 model Cart {
   id         String   @id @default(uuid())
-  customerId String
+  customerId String   @unique
   createdAt  DateTime @default(now())
 
   customer User @relation(fields: [customerId], references: [id])
@@ -103,11 +103,13 @@ model CartItem {
   cartId         String
   mealId         String
   providerId     String
-  quantity       Int
+  quantity       Int      @default(1)
   priceAtAddTime Decimal @db.Decimal(10, 2)
 
   cart Cart @relation(fields: [cartId], references: [id])
   meal Meal @relation(fields: [mealId], references: [id])
+
+  @@unique([cartId, mealId])
 }
 
 model Order {
@@ -116,7 +118,7 @@ model Order {
   providerId String
   status     OrderStatus @default(PLACED)
   address    String
-  totalPrice Float
+   totalPrice Decimal     @db.Decimal(10,2)       
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
@@ -131,7 +133,7 @@ model OrderItem {
   orderId  String
   mealId   String
   quantity Int
-  price    Float
+  price    Decimal @db.Decimal(10,2)
 
   order Order @relation(fields: [orderId], references: [id])
   meal  Meal  @relation(fields: [mealId], references: [id])
@@ -148,6 +150,4 @@ model Review {
 
   user User @relation(fields: [userId], references: [id])
   meal Meal @relation(fields: [mealId], references: [id])
-
-  @@unique([userId, mealId])
 }

@@ -6,6 +6,7 @@ import { MealRouter } from "./modules/meals/meal.route";
 import { categoryRoutes } from "./modules/category/category.router";
 import { orderRoutes } from "./modules/orders/order.router";
 import { adminRouter } from "./modules/admin/admin.router";
+import { reviewRoutes } from "./modules/review/review.route";
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use("/api", providerRouter);
 app.use("/api", MealRouter);
 app.use("/api", categoryRoutes);
 app.use("/api", orderRoutes);
+app.use("/api", reviewRoutes)
 app.use("/api/admin", adminRouter);
 
 
