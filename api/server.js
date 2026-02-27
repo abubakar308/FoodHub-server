@@ -218,6 +218,13 @@ var NullsOrder = {
 };
 var defineExtension = runtime2.Extensions.defineExtension;
 
+// generated/prisma/enums.ts
+var Role = {
+  CUSTOMER: "CUSTOMER",
+  PROVIDER: "PROVIDER",
+  ADMIN: "ADMIN"
+};
+
 // generated/prisma/client.ts
 globalThis["__dirname"] = path.dirname(fileURLToPath(import.meta.url));
 var PrismaClient = getPrismaClientClass();
@@ -385,13 +392,6 @@ var userRouter = router;
 
 // src/modules/providers/provider.route.ts
 import { Router as Router2 } from "express";
-
-// generated/prisma/enums.ts
-var Role = {
-  CUSTOMER: "CUSTOMER",
-  PROVIDER: "PROVIDER",
-  ADMIN: "ADMIN"
-};
 
 // src/modules/providers/provider.service.ts
 var createProviderProfile = async (userId, restaurantName, address, phone) => {
