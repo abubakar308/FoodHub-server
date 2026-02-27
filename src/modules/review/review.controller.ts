@@ -27,7 +27,6 @@ const createReview = async (req: Request, res: Response) => {
 };
 
 
-
 export const ReviewController = {
     createReview
 }

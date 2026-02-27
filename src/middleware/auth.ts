@@ -3,10 +3,16 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../config";
 import { prisma } from "../lib/prisma";
 
+export enum UserRole {
+  customer = "CUSTOMER",
+  provider = "PROVIDER",
+  admin = "ADMIN",
+}
+
 declare global {
   namespace Express {
     interface Request {
-      user: JwtPayload & { id: string; role: string };
+      user?: JwtPayload & { id: string; role: string; email: string };
     }
   }
 }

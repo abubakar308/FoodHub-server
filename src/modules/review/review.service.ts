@@ -25,7 +25,7 @@ const createReview = async (
       userId,
       mealId,
       rating,
-      comment,
+      comment: comment ?? null,
     },
   });
 };

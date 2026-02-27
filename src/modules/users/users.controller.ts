@@ -30,11 +30,12 @@ const login: RequestHandler = async (req, res) => {
     const { email, password } = req.body;
     const result = await userService.login(email, password);
 
-       res.cookie("token", result.token, {
-      secure: false,
-      httpOnly: true,
-      sameSite: "strict", // none / strict / lax
-    });
+    res.cookie("token", result.token, {
+  httpOnly: true,
+  secure: false,        // localhost এ false, production এ true
+  sameSite: "lax",      // localhost এ lax works
+  path: "/",            // add this
+});
 
      sendResponse(res, {
       statusCode: 201,

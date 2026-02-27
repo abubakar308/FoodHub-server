@@ -7,6 +7,8 @@ import { categoryRoutes } from "./modules/category/category.router";
 import { orderRoutes } from "./modules/orders/order.router";
 import { adminRouter } from "./modules/admin/admin.router";
 import { reviewRoutes } from "./modules/review/review.route";
+import { errorHandler } from "./middleware/globalErrorHandler";
+import { notFound } from "./middleware/notFound";
 
 const app = express();
 
@@ -30,5 +32,9 @@ app.use("/api/admin", adminRouter);
 app.get("/",(req, res) =>{
     res.send("foodhub server running")
 })
+
+app.use(errorHandler);
+app.use(notFound);
+
 
 export default app;
