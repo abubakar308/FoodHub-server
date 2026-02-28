@@ -54,6 +54,30 @@ const getMeals = async (req: Request, res: Response) => {
   }
 };
 
+
+const getProviderMeals = async (providerId: string) => {
+  const meals = await prisma.meal.findMany({
+    where: {
+      providerId: providerId,
+    },
+    include: {
+      category: true,
+      provider: {
+        select: {
+          id: true,
+          restaurantName: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return meals;
+};
+
+
 // get meal details
 const getMeal = async (req: Request, res: Response) => {
   const meal = await MealService.getMealById(req.params.id as string);
