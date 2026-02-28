@@ -1333,19 +1333,8 @@ app.use(errorHandler);
 app.use(notFound);
 var app_default = app;
 
-// src/server.ts
-var PORT = config_default.port || 5e3;
-async function main() {
-  try {
-    await prisma.$connect();
-    console.log("Connected to the database successfully.");
-    app_default.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
-    });
-  } catch (error) {
-    console.error("An error occurred:", error);
-    await prisma.$disconnect();
-    process.exit(1);
-  }
-}
-main();
+// src/index.ts
+var index_default = app_default;
+export {
+  index_default as default
+};
