@@ -14,7 +14,10 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:3000", // frontend URL
+    origin: [
+      "http://localhost:3000",
+      "https://foodhub-client-six.vercel.app",
+    ],
     credentials: true,
   })
 );
