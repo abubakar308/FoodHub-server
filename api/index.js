@@ -30,14 +30,14 @@ var config = {
   "clientVersion": "7.3.0",
   "engineVersion": "9d6ad21cbbceab97458517b147a6a09ff43aa735",
   "activeProvider": "postgresql",
-  "inlineSchema": '// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = "prisma-client"\n  output   = "../generated/prisma"\n}\n\ndatasource db {\n  provider = "postgresql"\n}\n\nenum Role {\n  CUSTOMER\n  PROVIDER\n  ADMIN\n}\n\nenum OrderStatus {\n  PLACED\n  PREPARING\n  READY\n  DELIVERED\n  CANCELLED\n}\n\nenum UserStatus {\n  ACTIVE\n  SUSPENDED\n}\n\nmodel User {\n  id        String     @id @default(uuid())\n  name      String\n  email     String     @unique\n  password  String\n  role      Role\n  status    UserStatus @default(ACTIVE)\n  createdAt DateTime   @default(now())\n  updatedAt DateTime   @updatedAt\n\n  providerProfile ProviderProfile?\n  orders          Order[]\n  reviews         Review[]\n  carts           Cart[]\n}\n\nmodel ProviderProfile {\n  id             String @id @default(uuid())\n  userId         String @unique\n  restaurantName String\n  address        String\n  phone          String\n\n  user   User    @relation(fields: [userId], references: [id])\n  meals  Meal[]\n  orders Order[]\n}\n\nmodel Category {\n  id   String @id @default(uuid())\n  name String @unique\n\n  meals Meal[]\n}\n\nmodel Meal {\n  id          String   @id @default(uuid())\n  title       String\n  description String?\n  price       Float\n  imageUrl    String?\n  isAvailable Boolean  @default(true)\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n\n  providerId String\n  categoryId String\n\n  provider ProviderProfile @relation(fields: [providerId], references: [id])\n  category Category        @relation(fields: [categoryId], references: [id])\n\n  reviews    Review[]\n  orderItems OrderItem[]\n  cartItems  CartItem[]\n}\n\nmodel Cart {\n  id         String   @id @default(uuid())\n  customerId String   @unique\n  createdAt  DateTime @default(now())\n\n  customer User @relation(fields: [customerId], references: [id])\n\n  items CartItem[]\n}\n\nmodel CartItem {\n  id             String  @id @default(uuid())\n  cartId         String\n  mealId         String\n  providerId     String\n  quantity       Int     @default(1)\n  priceAtAddTime Decimal @db.Decimal(10, 2)\n\n  cart Cart @relation(fields: [cartId], references: [id])\n  meal Meal @relation(fields: [mealId], references: [id])\n\n  @@unique([cartId, mealId])\n}\n\nmodel Order {\n  id         String      @id @default(uuid())\n  customerId String\n  providerId String\n  status     OrderStatus @default(PLACED)\n  address    String\n  totalPrice Decimal     @db.Decimal(10, 2)\n  createdAt  DateTime    @default(now())\n  updatedAt  DateTime    @updatedAt\n\n  customer User            @relation(fields: [customerId], references: [id])\n  provider ProviderProfile @relation(fields: [providerId], references: [id])\n\n  items OrderItem[]\n}\n\nmodel OrderItem {\n  id       String  @id @default(uuid())\n  orderId  String\n  mealId   String\n  quantity Int\n  price    Decimal @db.Decimal(10, 2)\n\n  order Order @relation(fields: [orderId], references: [id])\n  meal  Meal  @relation(fields: [mealId], references: [id])\n}\n\nmodel Review {\n  id        String   @id @default(uuid())\n  rating    Int\n  comment   String?\n  createdAt DateTime @default(now())\n\n  userId String\n  mealId String\n\n  user User @relation(fields: [userId], references: [id])\n  meal Meal @relation(fields: [mealId], references: [id])\n}\n',
+  "inlineSchema": 'generator client {\n  provider = "prisma-client"\n  output   = "../../generated/prisma"\n}\n\ndatasource db {\n  provider = "postgresql"\n}\n\nmodel Cart {\n  id         String   @id @default(uuid())\n  customerId String   @unique\n  createdAt  DateTime @default(now())\n  updatedAt  DateTime @updatedAt\n\n  customer User       @relation(fields: [customerId], references: [id])\n  items    CartItem[]\n}\n\nmodel CartItem {\n  id             String   @id @default(uuid())\n  cartId         String\n  mealId         String\n  quantity       Int      @default(1)\n  priceAtAddTime Decimal  @db.Decimal(10, 2)\n  createdAt      DateTime @default(now())\n\n  cart Cart @relation(fields: [cartId], references: [id])\n  meal Meal @relation(fields: [mealId], references: [id])\n\n  @@unique([cartId, mealId])\n}\n\nmodel Category {\n  id          String   @id @default(uuid())\n  name        String   @unique\n  slug        String   @unique\n  icon        String?\n  image       String?\n  description String?\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n\n  meals Meal[]\n}\n\nmodel Meal {\n  id               String   @id @default(uuid())\n  title            String\n  slug             String   @unique\n  shortDescription String?\n  description      String?\n  ingredients      String?\n  price            Decimal  @db.Decimal(10, 2)\n  discountPrice    Decimal? @db.Decimal(10, 2)\n  imageUrl         String?\n  isAvailable      Boolean  @default(true)\n  isFeatured       Boolean  @default(false)\n  averageRating    Float    @default(0)\n  totalReviews     Int      @default(0)\n  preparationTime  Int?\n  calories         Int?\n  tags             String?\n  createdAt        DateTime @default(now())\n  updatedAt        DateTime @updatedAt\n\n  providerId String\n  categoryId String\n\n  provider ProviderProfile @relation(fields: [providerId], references: [id])\n  category Category        @relation(fields: [categoryId], references: [id])\n\n  reviews       Review[]\n  orderItems    OrderItem[]\n  cartItems     CartItem[]\n  wishlist      Wishlist[]\n  reviewSummary ReviewSummary?\n}\n\nenum Role {\n  CUSTOMER\n  PROVIDER\n  MANAGER\n  ADMIN\n  SUPER_ADMIN\n}\n\nenum AuthProvider {\n  CREDENTIALS\n  GOOGLE\n}\n\nenum OrderStatus {\n  PLACED\n  PREPARING\n  READY\n  DELIVERED\n  CANCELLED\n}\n\nenum PaymentStatus {\n  UNPAID\n  PAID\n  REFUNDED\n}\n\nenum PaymentMethod {\n  CASH_ON_DELIVERY\n  ONLINE\n}\n\nenum UserStatus {\n  ACTIVE\n  SUSPENDED\n}\n\nmodel Review {\n  id        String   @id @default(uuid())\n  rating    Int\n  comment   String?\n  isVisible Boolean  @default(true)\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  userId String\n  mealId String\n\n  user User @relation(fields: [userId], references: [id])\n  meal Meal @relation(fields: [mealId], references: [id])\n\n  @@unique([userId, mealId])\n}\n\nmodel Wishlist {\n  id        String   @id @default(uuid())\n  userId    String\n  mealId    String\n  createdAt DateTime @default(now())\n\n  user User @relation(fields: [userId], references: [id])\n  meal Meal @relation(fields: [mealId], references: [id])\n\n  @@unique([userId, mealId])\n}\n\nmodel ReviewSummary {\n  id          String   @id @default(uuid())\n  mealId      String   @unique\n  summary     String\n  generatedAt DateTime @default(now())\n\n  meal Meal @relation(fields: [mealId], references: [id])\n}\n\nmodel ContactMessage {\n  id        String   @id @default(uuid())\n  name      String\n  email     String\n  subject   String?\n  message   String\n  createdAt DateTime @default(now())\n}\n\nmodel NewsletterSubscriber {\n  id           String   @id @default(uuid())\n  email        String   @unique\n  subscribedAt DateTime @default(now())\n}\n\nmodel Offer {\n  id          String   @id @default(uuid())\n  title       String\n  description String?\n  discount    Int?\n  imageUrl    String?\n  isActive    Boolean  @default(true)\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n}\n\nmodel Blog {\n  id          String   @id @default(uuid())\n  title       String\n  slug        String   @unique\n  excerpt     String?\n  content     String\n  imageUrl    String?\n  isPublished Boolean  @default(true)\n  createdAt   DateTime @default(now())\n  updatedAt   DateTime @updatedAt\n}\n\nmodel AIChatLog {\n  id        String   @id @default(uuid())\n  userId    String?\n  prompt    String\n  response  String\n  createdAt DateTime @default(now())\n}\n\nmodel Order {\n  id            String        @id @default(uuid())\n  customerId    String\n  providerId    String\n  status        OrderStatus   @default(PLACED)\n  paymentStatus PaymentStatus @default(UNPAID)\n  paymentMethod PaymentMethod @default(CASH_ON_DELIVERY)\n  address       String\n  phone         String?\n  notes         String?\n  totalPrice    Decimal       @db.Decimal(10, 2)\n  createdAt     DateTime      @default(now())\n  updatedAt     DateTime      @updatedAt\n\n  customer User            @relation(fields: [customerId], references: [id])\n  provider ProviderProfile @relation(fields: [providerId], references: [id])\n\n  items OrderItem[]\n}\n\nmodel OrderItem {\n  id        String   @id @default(uuid())\n  orderId   String\n  mealId    String\n  quantity  Int\n  price     Decimal  @db.Decimal(10, 2)\n  createdAt DateTime @default(now())\n\n  order Order @relation(fields: [orderId], references: [id])\n  meal  Meal  @relation(fields: [mealId], references: [id])\n}\n\nmodel User {\n  id       String     @id @default(uuid())\n  name     String\n  email    String     @unique\n  password String?\n  avatar   String?\n  phone    String?\n  address  String?\n  bio      String?\n  role     Role       @default(CUSTOMER)\n  status   UserStatus @default(ACTIVE)\n\n  authProvider    AuthProvider @default(CREDENTIALS)\n  providerId      String?\n  isEmailVerified Boolean      @default(false)\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  providerProfile ProviderProfile?\n  orders          Order[]\n  reviews         Review[]\n  cart            Cart?\n  wishlistItems   Wishlist[]\n}\n\nmodel ProviderProfile {\n  id             String   @id @default(uuid())\n  userId         String   @unique\n  restaurantName String\n  restaurantLogo String?\n  bannerImage    String?\n  address        String\n  phone          String\n  description    String?\n  cuisineType    String?\n  openingTime    String?\n  closingTime    String?\n  deliveryArea   String?\n  isApproved     Boolean  @default(false)\n  averageRating  Float    @default(0)\n  totalReviews   Int      @default(0)\n  createdAt      DateTime @default(now())\n  updatedAt      DateTime @updatedAt\n\n  user   User    @relation(fields: [userId], references: [id])\n  meals  Meal[]\n  orders Order[]\n}\n',
   "runtimeDataModel": {
     "models": {},
     "enums": {},
     "types": {}
   }
 };
-config.runtimeDataModel = JSON.parse('{"models":{"User":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"email","kind":"scalar","type":"String"},{"name":"password","kind":"scalar","type":"String"},{"name":"role","kind":"enum","type":"Role"},{"name":"status","kind":"enum","type":"UserStatus"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"providerProfile","kind":"object","type":"ProviderProfile","relationName":"ProviderProfileToUser"},{"name":"orders","kind":"object","type":"Order","relationName":"OrderToUser"},{"name":"reviews","kind":"object","type":"Review","relationName":"ReviewToUser"},{"name":"carts","kind":"object","type":"Cart","relationName":"CartToUser"}],"dbName":null},"ProviderProfile":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"restaurantName","kind":"scalar","type":"String"},{"name":"address","kind":"scalar","type":"String"},{"name":"phone","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"ProviderProfileToUser"},{"name":"meals","kind":"object","type":"Meal","relationName":"MealToProviderProfile"},{"name":"orders","kind":"object","type":"Order","relationName":"OrderToProviderProfile"}],"dbName":null},"Category":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"meals","kind":"object","type":"Meal","relationName":"CategoryToMeal"}],"dbName":null},"Meal":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"title","kind":"scalar","type":"String"},{"name":"description","kind":"scalar","type":"String"},{"name":"price","kind":"scalar","type":"Float"},{"name":"imageUrl","kind":"scalar","type":"String"},{"name":"isAvailable","kind":"scalar","type":"Boolean"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"categoryId","kind":"scalar","type":"String"},{"name":"provider","kind":"object","type":"ProviderProfile","relationName":"MealToProviderProfile"},{"name":"category","kind":"object","type":"Category","relationName":"CategoryToMeal"},{"name":"reviews","kind":"object","type":"Review","relationName":"MealToReview"},{"name":"orderItems","kind":"object","type":"OrderItem","relationName":"MealToOrderItem"},{"name":"cartItems","kind":"object","type":"CartItem","relationName":"CartItemToMeal"}],"dbName":null},"Cart":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"customerId","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"customer","kind":"object","type":"User","relationName":"CartToUser"},{"name":"items","kind":"object","type":"CartItem","relationName":"CartToCartItem"}],"dbName":null},"CartItem":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"cartId","kind":"scalar","type":"String"},{"name":"mealId","kind":"scalar","type":"String"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"quantity","kind":"scalar","type":"Int"},{"name":"priceAtAddTime","kind":"scalar","type":"Decimal"},{"name":"cart","kind":"object","type":"Cart","relationName":"CartToCartItem"},{"name":"meal","kind":"object","type":"Meal","relationName":"CartItemToMeal"}],"dbName":null},"Order":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"customerId","kind":"scalar","type":"String"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"status","kind":"enum","type":"OrderStatus"},{"name":"address","kind":"scalar","type":"String"},{"name":"totalPrice","kind":"scalar","type":"Decimal"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"customer","kind":"object","type":"User","relationName":"OrderToUser"},{"name":"provider","kind":"object","type":"ProviderProfile","relationName":"OrderToProviderProfile"},{"name":"items","kind":"object","type":"OrderItem","relationName":"OrderToOrderItem"}],"dbName":null},"OrderItem":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"orderId","kind":"scalar","type":"String"},{"name":"mealId","kind":"scalar","type":"String"},{"name":"quantity","kind":"scalar","type":"Int"},{"name":"price","kind":"scalar","type":"Decimal"},{"name":"order","kind":"object","type":"Order","relationName":"OrderToOrderItem"},{"name":"meal","kind":"object","type":"Meal","relationName":"MealToOrderItem"}],"dbName":null},"Review":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"rating","kind":"scalar","type":"Int"},{"name":"comment","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"userId","kind":"scalar","type":"String"},{"name":"mealId","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"ReviewToUser"},{"name":"meal","kind":"object","type":"Meal","relationName":"MealToReview"}],"dbName":null}},"enums":{},"types":{}}');
+config.runtimeDataModel = JSON.parse('{"models":{"Cart":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"customerId","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"customer","kind":"object","type":"User","relationName":"CartToUser"},{"name":"items","kind":"object","type":"CartItem","relationName":"CartToCartItem"}],"dbName":null},"CartItem":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"cartId","kind":"scalar","type":"String"},{"name":"mealId","kind":"scalar","type":"String"},{"name":"quantity","kind":"scalar","type":"Int"},{"name":"priceAtAddTime","kind":"scalar","type":"Decimal"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"cart","kind":"object","type":"Cart","relationName":"CartToCartItem"},{"name":"meal","kind":"object","type":"Meal","relationName":"CartItemToMeal"}],"dbName":null},"Category":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"slug","kind":"scalar","type":"String"},{"name":"icon","kind":"scalar","type":"String"},{"name":"image","kind":"scalar","type":"String"},{"name":"description","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"meals","kind":"object","type":"Meal","relationName":"CategoryToMeal"}],"dbName":null},"Meal":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"title","kind":"scalar","type":"String"},{"name":"slug","kind":"scalar","type":"String"},{"name":"shortDescription","kind":"scalar","type":"String"},{"name":"description","kind":"scalar","type":"String"},{"name":"ingredients","kind":"scalar","type":"String"},{"name":"price","kind":"scalar","type":"Decimal"},{"name":"discountPrice","kind":"scalar","type":"Decimal"},{"name":"imageUrl","kind":"scalar","type":"String"},{"name":"isAvailable","kind":"scalar","type":"Boolean"},{"name":"isFeatured","kind":"scalar","type":"Boolean"},{"name":"averageRating","kind":"scalar","type":"Float"},{"name":"totalReviews","kind":"scalar","type":"Int"},{"name":"preparationTime","kind":"scalar","type":"Int"},{"name":"calories","kind":"scalar","type":"Int"},{"name":"tags","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"categoryId","kind":"scalar","type":"String"},{"name":"provider","kind":"object","type":"ProviderProfile","relationName":"MealToProviderProfile"},{"name":"category","kind":"object","type":"Category","relationName":"CategoryToMeal"},{"name":"reviews","kind":"object","type":"Review","relationName":"MealToReview"},{"name":"orderItems","kind":"object","type":"OrderItem","relationName":"MealToOrderItem"},{"name":"cartItems","kind":"object","type":"CartItem","relationName":"CartItemToMeal"},{"name":"wishlist","kind":"object","type":"Wishlist","relationName":"MealToWishlist"},{"name":"reviewSummary","kind":"object","type":"ReviewSummary","relationName":"MealToReviewSummary"}],"dbName":null},"Review":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"rating","kind":"scalar","type":"Int"},{"name":"comment","kind":"scalar","type":"String"},{"name":"isVisible","kind":"scalar","type":"Boolean"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"userId","kind":"scalar","type":"String"},{"name":"mealId","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"ReviewToUser"},{"name":"meal","kind":"object","type":"Meal","relationName":"MealToReview"}],"dbName":null},"Wishlist":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"mealId","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"user","kind":"object","type":"User","relationName":"UserToWishlist"},{"name":"meal","kind":"object","type":"Meal","relationName":"MealToWishlist"}],"dbName":null},"ReviewSummary":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"mealId","kind":"scalar","type":"String"},{"name":"summary","kind":"scalar","type":"String"},{"name":"generatedAt","kind":"scalar","type":"DateTime"},{"name":"meal","kind":"object","type":"Meal","relationName":"MealToReviewSummary"}],"dbName":null},"ContactMessage":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"email","kind":"scalar","type":"String"},{"name":"subject","kind":"scalar","type":"String"},{"name":"message","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"}],"dbName":null},"NewsletterSubscriber":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"email","kind":"scalar","type":"String"},{"name":"subscribedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"Offer":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"title","kind":"scalar","type":"String"},{"name":"description","kind":"scalar","type":"String"},{"name":"discount","kind":"scalar","type":"Int"},{"name":"imageUrl","kind":"scalar","type":"String"},{"name":"isActive","kind":"scalar","type":"Boolean"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"Blog":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"title","kind":"scalar","type":"String"},{"name":"slug","kind":"scalar","type":"String"},{"name":"excerpt","kind":"scalar","type":"String"},{"name":"content","kind":"scalar","type":"String"},{"name":"imageUrl","kind":"scalar","type":"String"},{"name":"isPublished","kind":"scalar","type":"Boolean"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"AIChatLog":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"prompt","kind":"scalar","type":"String"},{"name":"response","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"}],"dbName":null},"Order":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"customerId","kind":"scalar","type":"String"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"status","kind":"enum","type":"OrderStatus"},{"name":"paymentStatus","kind":"enum","type":"PaymentStatus"},{"name":"paymentMethod","kind":"enum","type":"PaymentMethod"},{"name":"address","kind":"scalar","type":"String"},{"name":"phone","kind":"scalar","type":"String"},{"name":"notes","kind":"scalar","type":"String"},{"name":"totalPrice","kind":"scalar","type":"Decimal"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"customer","kind":"object","type":"User","relationName":"OrderToUser"},{"name":"provider","kind":"object","type":"ProviderProfile","relationName":"OrderToProviderProfile"},{"name":"items","kind":"object","type":"OrderItem","relationName":"OrderToOrderItem"}],"dbName":null},"OrderItem":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"orderId","kind":"scalar","type":"String"},{"name":"mealId","kind":"scalar","type":"String"},{"name":"quantity","kind":"scalar","type":"Int"},{"name":"price","kind":"scalar","type":"Decimal"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"order","kind":"object","type":"Order","relationName":"OrderToOrderItem"},{"name":"meal","kind":"object","type":"Meal","relationName":"MealToOrderItem"}],"dbName":null},"User":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"email","kind":"scalar","type":"String"},{"name":"password","kind":"scalar","type":"String"},{"name":"avatar","kind":"scalar","type":"String"},{"name":"phone","kind":"scalar","type":"String"},{"name":"address","kind":"scalar","type":"String"},{"name":"bio","kind":"scalar","type":"String"},{"name":"role","kind":"enum","type":"Role"},{"name":"status","kind":"enum","type":"UserStatus"},{"name":"authProvider","kind":"enum","type":"AuthProvider"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"isEmailVerified","kind":"scalar","type":"Boolean"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"providerProfile","kind":"object","type":"ProviderProfile","relationName":"ProviderProfileToUser"},{"name":"orders","kind":"object","type":"Order","relationName":"OrderToUser"},{"name":"reviews","kind":"object","type":"Review","relationName":"ReviewToUser"},{"name":"cart","kind":"object","type":"Cart","relationName":"CartToUser"},{"name":"wishlistItems","kind":"object","type":"Wishlist","relationName":"UserToWishlist"}],"dbName":null},"ProviderProfile":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"restaurantName","kind":"scalar","type":"String"},{"name":"restaurantLogo","kind":"scalar","type":"String"},{"name":"bannerImage","kind":"scalar","type":"String"},{"name":"address","kind":"scalar","type":"String"},{"name":"phone","kind":"scalar","type":"String"},{"name":"description","kind":"scalar","type":"String"},{"name":"cuisineType","kind":"scalar","type":"String"},{"name":"openingTime","kind":"scalar","type":"String"},{"name":"closingTime","kind":"scalar","type":"String"},{"name":"deliveryArea","kind":"scalar","type":"String"},{"name":"isApproved","kind":"scalar","type":"Boolean"},{"name":"averageRating","kind":"scalar","type":"Float"},{"name":"totalReviews","kind":"scalar","type":"Int"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"user","kind":"object","type":"User","relationName":"ProviderProfileToUser"},{"name":"meals","kind":"object","type":"Meal","relationName":"MealToProviderProfile"},{"name":"orders","kind":"object","type":"Order","relationName":"OrderToProviderProfile"}],"dbName":null}},"enums":{},"types":{}}');
 async function decodeBase64AsWasm(wasmBase64) {
   const { Buffer: Buffer2 } = await import("buffer");
   const wasmArray = Buffer2.from(wasmBase64, "base64");
@@ -58,17 +58,22 @@ function getPrismaClientClass() {
 // generated/prisma/internal/prismaNamespace.ts
 var prismaNamespace_exports = {};
 __export(prismaNamespace_exports, {
+  AIChatLogScalarFieldEnum: () => AIChatLogScalarFieldEnum,
   AnyNull: () => AnyNull2,
+  BlogScalarFieldEnum: () => BlogScalarFieldEnum,
   CartItemScalarFieldEnum: () => CartItemScalarFieldEnum,
   CartScalarFieldEnum: () => CartScalarFieldEnum,
   CategoryScalarFieldEnum: () => CategoryScalarFieldEnum,
+  ContactMessageScalarFieldEnum: () => ContactMessageScalarFieldEnum,
   DbNull: () => DbNull2,
   Decimal: () => Decimal2,
   JsonNull: () => JsonNull2,
   MealScalarFieldEnum: () => MealScalarFieldEnum,
   ModelName: () => ModelName,
+  NewsletterSubscriberScalarFieldEnum: () => NewsletterSubscriberScalarFieldEnum,
   NullTypes: () => NullTypes2,
   NullsOrder: () => NullsOrder,
+  OfferScalarFieldEnum: () => OfferScalarFieldEnum,
   OrderItemScalarFieldEnum: () => OrderItemScalarFieldEnum,
   OrderScalarFieldEnum: () => OrderScalarFieldEnum,
   PrismaClientInitializationError: () => PrismaClientInitializationError2,
@@ -79,10 +84,12 @@ __export(prismaNamespace_exports, {
   ProviderProfileScalarFieldEnum: () => ProviderProfileScalarFieldEnum,
   QueryMode: () => QueryMode,
   ReviewScalarFieldEnum: () => ReviewScalarFieldEnum,
+  ReviewSummaryScalarFieldEnum: () => ReviewSummaryScalarFieldEnum,
   SortOrder: () => SortOrder,
   Sql: () => Sql2,
   TransactionIsolationLevel: () => TransactionIsolationLevel,
   UserScalarFieldEnum: () => UserScalarFieldEnum,
+  WishlistScalarFieldEnum: () => WishlistScalarFieldEnum,
   defineExtension: () => defineExtension,
   empty: () => empty2,
   getExtensionContext: () => getExtensionContext,
@@ -117,15 +124,22 @@ var DbNull2 = runtime2.DbNull;
 var JsonNull2 = runtime2.JsonNull;
 var AnyNull2 = runtime2.AnyNull;
 var ModelName = {
-  User: "User",
-  ProviderProfile: "ProviderProfile",
-  Category: "Category",
-  Meal: "Meal",
   Cart: "Cart",
   CartItem: "CartItem",
+  Category: "Category",
+  Meal: "Meal",
+  Review: "Review",
+  Wishlist: "Wishlist",
+  ReviewSummary: "ReviewSummary",
+  ContactMessage: "ContactMessage",
+  NewsletterSubscriber: "NewsletterSubscriber",
+  Offer: "Offer",
+  Blog: "Blog",
+  AIChatLog: "AIChatLog",
   Order: "Order",
   OrderItem: "OrderItem",
-  Review: "Review"
+  User: "User",
+  ProviderProfile: "ProviderProfile"
 };
 var TransactionIsolationLevel = runtime2.makeStrictEnum({
   ReadUncommitted: "ReadUncommitted",
@@ -133,58 +147,125 @@ var TransactionIsolationLevel = runtime2.makeStrictEnum({
   RepeatableRead: "RepeatableRead",
   Serializable: "Serializable"
 });
-var UserScalarFieldEnum = {
-  id: "id",
-  name: "name",
-  email: "email",
-  password: "password",
-  role: "role",
-  status: "status",
-  createdAt: "createdAt",
-  updatedAt: "updatedAt"
-};
-var ProviderProfileScalarFieldEnum = {
-  id: "id",
-  userId: "userId",
-  restaurantName: "restaurantName",
-  address: "address",
-  phone: "phone"
-};
-var CategoryScalarFieldEnum = {
-  id: "id",
-  name: "name"
-};
-var MealScalarFieldEnum = {
-  id: "id",
-  title: "title",
-  description: "description",
-  price: "price",
-  imageUrl: "imageUrl",
-  isAvailable: "isAvailable",
-  createdAt: "createdAt",
-  updatedAt: "updatedAt",
-  providerId: "providerId",
-  categoryId: "categoryId"
-};
 var CartScalarFieldEnum = {
   id: "id",
   customerId: "customerId",
-  createdAt: "createdAt"
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
 };
 var CartItemScalarFieldEnum = {
   id: "id",
   cartId: "cartId",
   mealId: "mealId",
-  providerId: "providerId",
   quantity: "quantity",
-  priceAtAddTime: "priceAtAddTime"
+  priceAtAddTime: "priceAtAddTime",
+  createdAt: "createdAt"
+};
+var CategoryScalarFieldEnum = {
+  id: "id",
+  name: "name",
+  slug: "slug",
+  icon: "icon",
+  image: "image",
+  description: "description",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
+};
+var MealScalarFieldEnum = {
+  id: "id",
+  title: "title",
+  slug: "slug",
+  shortDescription: "shortDescription",
+  description: "description",
+  ingredients: "ingredients",
+  price: "price",
+  discountPrice: "discountPrice",
+  imageUrl: "imageUrl",
+  isAvailable: "isAvailable",
+  isFeatured: "isFeatured",
+  averageRating: "averageRating",
+  totalReviews: "totalReviews",
+  preparationTime: "preparationTime",
+  calories: "calories",
+  tags: "tags",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+  providerId: "providerId",
+  categoryId: "categoryId"
+};
+var ReviewScalarFieldEnum = {
+  id: "id",
+  rating: "rating",
+  comment: "comment",
+  isVisible: "isVisible",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt",
+  userId: "userId",
+  mealId: "mealId"
+};
+var WishlistScalarFieldEnum = {
+  id: "id",
+  userId: "userId",
+  mealId: "mealId",
+  createdAt: "createdAt"
+};
+var ReviewSummaryScalarFieldEnum = {
+  id: "id",
+  mealId: "mealId",
+  summary: "summary",
+  generatedAt: "generatedAt"
+};
+var ContactMessageScalarFieldEnum = {
+  id: "id",
+  name: "name",
+  email: "email",
+  subject: "subject",
+  message: "message",
+  createdAt: "createdAt"
+};
+var NewsletterSubscriberScalarFieldEnum = {
+  id: "id",
+  email: "email",
+  subscribedAt: "subscribedAt"
+};
+var OfferScalarFieldEnum = {
+  id: "id",
+  title: "title",
+  description: "description",
+  discount: "discount",
+  imageUrl: "imageUrl",
+  isActive: "isActive",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
+};
+var BlogScalarFieldEnum = {
+  id: "id",
+  title: "title",
+  slug: "slug",
+  excerpt: "excerpt",
+  content: "content",
+  imageUrl: "imageUrl",
+  isPublished: "isPublished",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
+};
+var AIChatLogScalarFieldEnum = {
+  id: "id",
+  userId: "userId",
+  prompt: "prompt",
+  response: "response",
+  createdAt: "createdAt"
 };
 var OrderScalarFieldEnum = {
   id: "id",
   customerId: "customerId",
   providerId: "providerId",
   status: "status",
+  paymentStatus: "paymentStatus",
+  paymentMethod: "paymentMethod",
   address: "address",
+  phone: "phone",
+  notes: "notes",
   totalPrice: "totalPrice",
   createdAt: "createdAt",
   updatedAt: "updatedAt"
@@ -194,15 +275,44 @@ var OrderItemScalarFieldEnum = {
   orderId: "orderId",
   mealId: "mealId",
   quantity: "quantity",
-  price: "price"
+  price: "price",
+  createdAt: "createdAt"
 };
-var ReviewScalarFieldEnum = {
+var UserScalarFieldEnum = {
   id: "id",
-  rating: "rating",
-  comment: "comment",
+  name: "name",
+  email: "email",
+  password: "password",
+  avatar: "avatar",
+  phone: "phone",
+  address: "address",
+  bio: "bio",
+  role: "role",
+  status: "status",
+  authProvider: "authProvider",
+  providerId: "providerId",
+  isEmailVerified: "isEmailVerified",
   createdAt: "createdAt",
+  updatedAt: "updatedAt"
+};
+var ProviderProfileScalarFieldEnum = {
+  id: "id",
   userId: "userId",
-  mealId: "mealId"
+  restaurantName: "restaurantName",
+  restaurantLogo: "restaurantLogo",
+  bannerImage: "bannerImage",
+  address: "address",
+  phone: "phone",
+  description: "description",
+  cuisineType: "cuisineType",
+  openingTime: "openingTime",
+  closingTime: "closingTime",
+  deliveryArea: "deliveryArea",
+  isApproved: "isApproved",
+  averageRating: "averageRating",
+  totalReviews: "totalReviews",
+  createdAt: "createdAt",
+  updatedAt: "updatedAt"
 };
 var SortOrder = {
   asc: "asc",
@@ -222,7 +332,9 @@ var defineExtension = runtime2.Extensions.defineExtension;
 var Role = {
   CUSTOMER: "CUSTOMER",
   PROVIDER: "PROVIDER",
-  ADMIN: "ADMIN"
+  MANAGER: "MANAGER",
+  ADMIN: "ADMIN",
+  SUPER_ADMIN: "SUPER_ADMIN"
 };
 
 // generated/prisma/client.ts
@@ -1313,8 +1425,10 @@ function notFound(req, res) {
 var app = express();
 app.use(
   cors({
-    origin: "http://localhost:3000",
-    // frontend URL
+    origin: [
+      "http://localhost:3000",
+      "https://foodhub-client-six.vercel.app"
+    ],
     credentials: true
   })
 );

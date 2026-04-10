@@ -3,7 +3,7 @@ import { Role } from "../../generated/prisma/enums";
 import { prisma } from "../lib/prisma";
 
 const seedAdmin = async () => {
-  const hashedPassword = await bcrypt.hash("admin12", 8);
+  const hashedPassword = await bcrypt.hash("Admin@12", 8);
 
   const adminData = {
     name: "Admin",
@@ -24,13 +24,12 @@ const seedAdmin = async () => {
       console.log("Admin already exists!!");
       return;
     }
-    const admin = await prisma.user.create({
+    await prisma.user.create({
       data: adminData,
     });
-    console.log("Admin created successfully!!");
   } catch (error) {
     console.log(error);
-  } finally{
+  } finally {
     await prisma.$disconnect()
   }
 };

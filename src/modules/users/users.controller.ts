@@ -2,69 +2,33 @@ import { RequestHandler } from "express";
 import { userService } from "./users.server";
 import sendResponse from "../../utils/sendResponse";
 
-const register: RequestHandler = async (req, res) => {
+const getProfile: RequestHandler = async (req, res) => {
 
-  try {
-    const payload = req.body;
-    const result = await userService.register(payload);
+  const user = await userService.getProfile(req.user?.id as string);
 
-    sendResponse(res, {
-      statusCode: 201,
-      success: true,
-      message: "Register successfull",
-      data: result,
-    })
-
-  } catch (error: any) {
-    res.status(400).json({
-      secces: false,
-      error: "Registration failed",
-      details: error.message
-    })
-  }
-}
-
-const login: RequestHandler = async (req, res) => {
-
-  try {
-    const { email, password } = req.body;
-    const result = await userService.login(email, password);
-
-    res.cookie("token", result.token, {
-  httpOnly: true,
-  secure: false,        // localhost এ false, production এ true
-  sameSite: "lax",      // localhost এ lax works
-  path: "/",            // add this
-});
-
-     sendResponse(res, {
-      statusCode: 201,
-      success: true,
-      message: "LogedIn successfull",
-      data: result,
-    })
-
-  } catch (error: any) {
-res.status(400).json({
-      seccess: false,
-      error: "Login failed",
-      details: error.message
-    })
-  }
+ sendResponse(res, {
+  statusCode: 200,
+  success: true,
+  message: "Profile fetched successfully",
+  data: user
+ })
 };
 
+const updateProfile: RequestHandler = async (req, res) => {
 
-export const getProfile: RequestHandler = async (req, res) => {
-  try {
-    const user = await userService.getProfile(req.user.id);
-    res.status(200).json({ success: true, message: "Profile fetched successfully", data: user });
-  } catch (err: any) {
-    res.status(400).json({ success: false, message: err.message });
-  }
+  console.log(req.body)
+  const user = await userService.updateProfile(req.user?.id as string, req.body);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Profile updated successfully",
+    data: user
+  })
 };
+
 
 export const userController = {
-  register,
-  login,
-  getProfile
+  getProfile,
+  updateProfile
 };

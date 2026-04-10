@@ -1,0 +1,36 @@
+enum Role {
+  CUSTOMER
+  PROVIDER
+  MANAGER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum AuthProvider {
+  CREDENTIALS
+  GOOGLE
+}
+
+enum OrderStatus {
+  PLACED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+  ONLINE
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}

@@ -4,8 +4,7 @@ import auth from "../../middleware/auth";
 
 const router = Router();
 
-router.post("/register", userController.register);
-router.post("/login", userController.login);
 router.get("/me", auth(), userController.getProfile)
+router.patch("/me", auth(), userController.updateProfile)
 
 export const userRouter: Router =  router;

@@ -1,0 +1,49 @@
+model User {
+  id       String     @id @default(uuid())
+  name     String
+  email    String     @unique
+  password String?
+  avatar   String?
+  phone    String?
+  address  String?
+  bio      String?
+  role     Role       @default(CUSTOMER)
+  status   UserStatus @default(ACTIVE)
+
+  authProvider    AuthProvider @default(CREDENTIALS)
+  providerId      String?
+  isEmailVerified Boolean      @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  providerProfile ProviderProfile?
+  orders          Order[]
+  reviews         Review[]
+  cart            Cart?
+  wishlistItems   Wishlist[]
+}
+
+model ProviderProfile {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  restaurantName String
+  restaurantLogo String?
+  bannerImage    String?
+  address        String
+  phone          String
+  description    String?
+  cuisineType    String?
+  openingTime    String?
+  closingTime    String?
+  deliveryArea   String?
+  isApproved     Boolean  @default(false)
+  averageRating  Float    @default(0)
+  totalReviews   Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime? @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id])
+  meals  Meal[]
+  orders Order[]
+}

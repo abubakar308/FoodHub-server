@@ -1,0 +1,45 @@
+model Category {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String?   @unique
+  icon        String?
+  image       String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime? @updatedAt
+
+  meals Meal[]
+}
+
+model Meal {
+  id               String   @id @default(uuid())
+  title            String
+  slug             String?   @unique
+  shortDescription String?
+  description      String?
+  ingredients      String?
+  price            Decimal  @db.Decimal(10, 2)
+  discountPrice    Decimal? @db.Decimal(10, 2)
+  imageUrl         String?
+  isAvailable      Boolean  @default(true)
+  isFeatured       Boolean  @default(false)
+  averageRating    Float    @default(0)
+  totalReviews     Int      @default(0)
+  preparationTime  Int?
+  calories         Int?
+  tags             String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime? @updatedAt
+
+  providerId String
+  categoryId String
+
+  provider ProviderProfile @relation(fields: [providerId], references: [id])
+  category Category        @relation(fields: [categoryId], references: [id])
+
+  reviews       Review[]
+  orderItems    OrderItem[]
+  cartItems     CartItem[]
+  wishlist      Wishlist[]
+  reviewSummary ReviewSummary?
+}

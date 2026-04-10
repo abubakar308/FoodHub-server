@@ -1,0 +1,37 @@
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int
+  comment   String?
+  isVisible Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime? @updatedAt
+
+  userId String
+  mealId String
+
+  user User @relation(fields: [userId], references: [id])
+  meal Meal @relation(fields: [mealId], references: [id])
+
+  @@unique([userId, mealId])
+}
+
+model Wishlist {
+  id        String   @id @default(uuid())
+  userId    String
+  mealId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  meal Meal @relation(fields: [mealId], references: [id])
+
+  @@unique([userId, mealId])
+}
+
+model ReviewSummary {
+  id          String   @id @default(uuid())
+  mealId      String   @unique
+  summary     String
+  generatedAt DateTime @default(now())
+
+  meal Meal @relation(fields: [mealId], references: [id])
+}
