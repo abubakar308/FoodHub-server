@@ -8,7 +8,10 @@ const router = Router();
 
 router.post("/addtocart", auth(Role.CUSTOMER), OrderController.addToCart);
 router.get("/mycart", auth(Role.CUSTOMER), OrderController.getMyCart);
-router.patch("/cart/:id", auth(Role.CUSTOMER), OrderController.updateQuantity)
+router.patch("/cart/:id", auth(Role.CUSTOMER), OrderController.updateQuantity);
+
+router.delete("/cart/:id", auth("CUSTOMER"), OrderController.removeCartItem);
+router.delete("/cart", auth("CUSTOMER"), OrderController.clearCart);
 
 router.post("/orders", auth(Role.CUSTOMER), OrderController.createOrder);
 router.get("/orders", auth(Role.CUSTOMER), OrderController.getMyOrders);

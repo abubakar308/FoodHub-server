@@ -1,42 +1,89 @@
 import { Request, Response } from "express";
 import * as CategoryService from "./category.service";
 
-// Create category
 export const createCategory = async (req: Request, res: Response) => {
   try {
     const { name } = req.body;
 
-    if (!name) {
-      return res.status(400).json({ message: "Category name is required" });
-    }
-
-    const category = await CategoryService.createCategory(name);
+    const result = await CategoryService.createCategory(name);
 
     res.status(201).json({
       success: true,
-      data: category,
+      message: "Category created",
+      data: result,
     });
   } catch (error: any) {
-    if (error.code === "P2002") {
-      return res.status(409).json({
-        message: "Category already exists",
-      });
-    }
-
-    res.status(500).json({ message: "Failed to create category" });
+    res.status(400).json({
+      success: false,
+      message:
+        error.message === "CATEGORY_ALREADY_EXISTS"
+          ? "Category already exists"
+          : "Failed to create category",
+      error: error.message,
+    });
   }
 };
 
-// Get all categories
-export const getCategories = async (_req: Request, res: Response) => {
+export const getAllCategories = async (req: Request, res: Response) => {
   try {
-    const categories = await CategoryService.getAllCategories();
+    const result = await CategoryService.getAllCategories();
 
-    res.status(200).json({
+    return res.json({
       success: true,
-      data: categories,
+      message: "Category fetched",
+      data: result,
     });
-  } catch {
-    res.status(500).json({ message: "Failed to fetch categories" });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message:
+        error.message === "CATEGORY_NOT_FOUND",
+      error: error.message,
+    });
+  }
+};
+
+export const updateCategory = async (req: Request, res: Response) => {
+  try {
+    const result = await CategoryService.updateCategory(
+      req.params.id as string,
+      req.body.name
+    );
+
+    res.json({
+      success: true,
+      message: "Category updated",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message:
+        error.message === "CATEGORY_NOT_FOUND"
+          ? "Category not found"
+          : "Update failed",
+      error: error.message,
+    });
+  }
+};
+
+export const deleteCategory = async (req: Request, res: Response) => {
+  try {
+    const result = await CategoryService.deleteCategory(req.params.id as StringIterator);
+
+    res.json({
+      success: true,
+      message: "Category deleted",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message:
+        error.message === "CATEGORY_HAS_MEALS"
+          ? "Cannot delete category with meals"
+          : "Delete failed",
+      error: error.message,
+    });
   }
 };

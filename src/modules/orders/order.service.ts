@@ -1,49 +1,66 @@
 import { prisma } from "../../lib/prisma";
+import { OrderStatus, PaymentMethod, PaymentStatus } from "../../../generated/prisma/client";
 
-type OrderItemInput = {
-  mealId: string;
-  quantity: number;
-};
-
-
-const addToCart = async (
-  customerId: string,
-  mealId: string
-) => {
-
-  // 1️⃣ fetch meal
+const addToCart = async (customerId: string, mealId: string) => {
   const meal = await prisma.meal.findUnique({
     where: { id: mealId },
-    select: { id: true, price: true, providerId: true },
+    select: {
+      id: true,
+      price: true,
+      discountPrice: true,
+      providerId: true,
+      isAvailable: true,
+    },
   });
 
-  if (!meal) throw new Error("Meal not found");
+  if (!meal) {
+    throw new Error("MEAL_NOT_FOUND");
+  }
 
-  // 2️⃣ find or create cart
-  let cart = await prisma.cart.findFirst({
+  if (!meal.isAvailable) {
+    throw new Error("MEAL_NOT_AVAILABLE");
+  }
+
+  let cart = await prisma.cart.findUnique({
     where: { customerId },
-    include: { items: true },
+    include: {
+      items: {
+        include: {
+          meal: {
+            select: {
+              providerId: true,
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!cart) {
     cart = await prisma.cart.create({
       data: { customerId },
-      include: { items: true },
+      include: {
+        items: {
+          include: {
+            meal: {
+              select: {
+                providerId: true,
+              },
+            },
+          },
+        },
+      },
     });
   }
 
-  // 3️⃣ ensure same provider
   if (cart.items.length > 0) {
-   const existingProvider = cart.items[0]?.providerId
+    const existingProviderId = cart.items[0]?.meal.providerId;
 
-    if (existingProvider !== meal.providerId) {
-      throw new Error("You can order from only one provider at a time");
+    if (existingProviderId !== meal.providerId) {
+      throw new Error("ONE_PROVIDER_ONLY");
     }
   }
-  
-  let quantity = 1;
 
-  // 4️⃣ check existing item
   const existingItem = await prisma.cartItem.findFirst({
     where: {
       cartId: cart.id,
@@ -51,34 +68,54 @@ const addToCart = async (
     },
   });
 
-  // 5️⃣ update quantity
   if (existingItem) {
     return prisma.cartItem.update({
       where: { id: existingItem.id },
-      data: { quantity: existingItem.quantity + quantity },
+      data: {
+        quantity: existingItem.quantity + 1,
+      },
+      include: {
+        meal: true,
+      },
     });
   }
+  const finalPrice =
+    meal.discountPrice && Number(meal.discountPrice) > 0
+      ? meal.discountPrice
+      : meal.price;
 
-  // 6️⃣ create new item
   return prisma.cartItem.create({
     data: {
       cartId: cart.id,
       mealId,
-      providerId: meal.providerId,
-      quantity: quantity,
-      priceAtAddTime: meal.price,
+      quantity: 1,
+      priceAtAddTime: finalPrice
+    },
+    include: {
+      meal: true,
     },
   });
 };
 
 
 const getMyCart = async (customerId: string) => {
-  const cart = await prisma.cart.findFirst({
+  const cart = await prisma.cart.findUnique({
     where: { customerId },
     include: {
       items: {
         include: {
-          meal: true,
+          meal: {
+            include: {
+              category: true,
+              provider: {
+                select: {
+                  id: true,
+                  restaurantName: true,
+                  restaurantLogo: true,
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -86,7 +123,6 @@ const getMyCart = async (customerId: string) => {
 
   if (!cart) return null;
 
-  // 🔥 calculate total
   const totalPrice = cart.items.reduce((sum, item) => {
     return sum + Number(item.priceAtAddTime) * item.quantity;
   }, 0);
@@ -102,12 +138,42 @@ const updateQuantity = async (
   cartItemId: string,
   quantity: number
 ) => {
-
   if (!Number.isInteger(quantity)) {
-    throw new Error("Quantity must be integer");
+    throw new Error("QUANTITY_MUST_BE_INTEGER");
   }
 
-  // 🔎 find item first
+  const item = await prisma.cartItem.findFirst({
+    where: {
+      id: cartItemId,
+      cart: {
+        customerId,
+      },
+    },
+    include: {
+      meal: true,
+    },
+  });
+
+  if (!item) {
+    throw new Error("CART_ITEM_NOT_FOUND");
+  }
+
+  if (quantity < 1) {
+    return prisma.cartItem.delete({
+      where: { id: cartItemId },
+    });
+  }
+
+  return prisma.cartItem.update({
+    where: { id: cartItemId },
+    data: { quantity },
+    include: {
+      meal: true,
+    },
+  });
+};
+
+const removeCartItem = async (customerId: string, cartItemId: string) => {
   const item = await prisma.cartItem.findFirst({
     where: {
       id: cartItemId,
@@ -118,116 +184,78 @@ const updateQuantity = async (
   });
 
   if (!item) {
-    throw new Error("Cart item not found");
+    throw new Error("CART_ITEM_NOT_FOUND");
   }
 
-  // 🗑 delete if 0
-  if (quantity < 1) {
-    return prisma.cartItem.delete({
-      where: { id: cartItemId },
-    });
-  }
-
-  // 🔄 update
-  return prisma.cartItem.update({
+  return prisma.cartItem.delete({
     where: { id: cartItemId },
-    data: { quantity },
   });
 };
 
-// const createOrder = async (customerId: string,
-//   items: OrderItemInput[],
-//   address: string,) => {
+const clearCart = async (customerId: string) => {
+  const cart = await prisma.cart.findUnique({
+    where: { customerId },
+  });
 
-//   // fetch meals
-//   const meals = await prisma.meal.findMany({
-//     where: {
-//       id: { in: items.map((i) => i.mealId) },
-//     },
-//     include: { provider: true },
-//   });
+  if (!cart) {
+    throw new Error("CART_NOT_FOUND");
+  }
 
-//   if (meals.length !== items.length) {
-//     throw new Error("Invalid meal selected");
-//   }
+  await prisma.cartItem.deleteMany({
+    where: { cartId: cart.id },
+  });
 
-//   // ensure same provider
-//   const providerId = meals[0]?.providerId;
-//   if (!providerId) {
-//     throw new Error("Invalid meal provider");
-//   }
-//   const sameProvider = meals.every((meal) => meal.providerId === providerId);
+  return null;
+};
 
-//   if (!sameProvider) {
-//     throw new Error("You can order from only one provider");
-//   }
-
-//   // calculate total
-//   let totalPrice = 0;
-
-//   const orderItems = items.map((item) => {
-//     const meal = meals.find((m) => m.id === item.mealId)!;
-//     const price = meal.price * item.quantity;
-//     totalPrice += price;
-
-//     return {
-//       mealId: item.mealId,
-//       quantity: item.quantity,
-//       price: meal.price,
-//     };
-//   });
-
-//   // Create order
-//   return prisma.order.create({
-//     data: {
-//       customerId,
-//       providerId,
-//       address,
-//       totalPrice,
-//       items: {
-//         create: orderItems,
-//       },
-//     },
-//     include: {
-//       items: {
-//         include: { meal: true },
-//       },
-//     },
-//   });
-
-// }
-
-
-
-
-// Get customer orders
-const createOrder = async (customerId: string, address: string) => {
-
-  const cart = await prisma.cart.findFirst({
+const createOrder = async (
+  customerId: string,
+  payload: {
+    address: string;
+    phone?: string;
+    notes?: string;
+    paymentMethod?: PaymentMethod;
+  }
+) => {
+  const cart = await prisma.cart.findUnique({
     where: { customerId },
     include: {
       items: {
-        include: { meal: true },
+        include: {
+          meal: true,
+        },
       },
     },
   });
 
   if (!cart || cart.items.length === 0) {
-    throw new Error("Cart is empty");
+    throw new Error("CART_IS_EMPTY");
   }
 
-  const providerId = cart.items[0].meal.providerId;
+  const providerId = cart.items[0]?.meal.providerId;
+
+  if (!providerId) {
+    throw new Error("INVALID_PROVIDER");
+  }
+
+  const sameProvider = cart.items.every(
+    (item) => item.meal.providerId === providerId
+  );
+
+  if (!sameProvider) {
+    throw new Error("ONE_PROVIDER_ONLY");
+  }
 
   let totalPrice = 0;
 
   const orderItems = cart.items.map((item) => {
-    const price = item.meal.price * item.quantity;
-    totalPrice += price;
+    const linePrice = Number(item.priceAtAddTime) * item.quantity;
+    totalPrice += linePrice;
 
     return {
       mealId: item.mealId,
       quantity: item.quantity,
-      price: item.meal.price,
+      price: item.priceAtAddTime,
     };
   });
 
@@ -235,18 +263,33 @@ const createOrder = async (customerId: string, address: string) => {
     data: {
       customerId,
       providerId,
-      address,
+      address: payload.address,
+      phone: payload.phone,
+      notes: payload.notes,
+      status: OrderStatus.PLACED,
+      paymentStatus: PaymentStatus.UNPAID,
+      paymentMethod: payload.paymentMethod ?? PaymentMethod.CASH_ON_DELIVERY,
       totalPrice,
       items: {
         create: orderItems,
       },
     },
     include: {
-      items: { include: { meal: true } },
+      items: {
+        include: {
+          meal: true,
+        },
+      },
+      provider: {
+        select: {
+          id: true,
+          restaurantName: true,
+          restaurantLogo: true,
+        },
+      },
     },
   });
 
-  // clear cart after order
   await prisma.cartItem.deleteMany({
     where: { cartId: cart.id },
   });
@@ -255,19 +298,28 @@ const createOrder = async (customerId: string, address: string) => {
 };
 
 const getCustomerOrders = async (customerId: string) => {
-  console.log(customerId)
   return prisma.order.findMany({
     where: { customerId },
     include: {
-      items: { include: { meal: true } },
-      provider: true,
+      items: {
+        include: {
+          meal: true,
+        },
+      },
+      provider: {
+        select: {
+          id: true,
+          restaurantName: true,
+          restaurantLogo: true,
+          phone: true,
+          address: true,
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
 };
 
-
-// Get order by id
 const getOrderById = async (customerId: string, orderId: string) => {
   const order = await prisma.order.findFirst({
     where: {
@@ -275,25 +327,37 @@ const getOrderById = async (customerId: string, orderId: string) => {
       customerId,
     },
     include: {
-      items: { include: { meal: true } },
-      provider: true,
+      items: {
+        include: {
+          meal: true,
+        },
+      },
+      provider: {
+        select: {
+          id: true,
+          restaurantName: true,
+          restaurantLogo: true,
+          phone: true,
+          address: true,
+        },
+      },
     },
   });
 
   if (!order) {
-    throw new Error("Order not found");
+    throw new Error("ORDER_NOT_FOUND");
   }
 
   return order;
 };
 
-
-
 export const OrderServices = {
   addToCart,
   getMyCart,
   updateQuantity,
+  removeCartItem,
+  clearCart,
   createOrder,
   getCustomerOrders,
-  getOrderById
-}
+  getOrderById,
+};
