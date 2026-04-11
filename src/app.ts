@@ -1,5 +1,5 @@
 import express from "express";
-import cors  from "cors"
+import cors from "cors"
 import { providerRouter } from "./modules/providers/provider.route";
 import { MealRouter } from "./modules/meals/meal.route";
 import { categoryRoutes } from "./modules/category/category.router";
@@ -24,19 +24,20 @@ app.use(
 );
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/users", userRouter);
-app.use("/api/v1/providers", providerRouter);
-app.use("/api/v1/meals", MealRouter);
-app.use("/api/v1/categories", categoryRoutes);
-app.use("/api/v1/orders", orderRoutes);
-app.use("/api/v1/reviews", reviewRoutes)
-app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1", authRouter);
+app.use("/api/v1", userRouter);
+app.use("/api/v1", providerRouter);
+app.use("/api/v1", MealRouter);
+app.use("/api/v1", categoryRoutes);
+app.use("/api/v1", orderRoutes);
+app.use("/api/v1", reviewRoutes)
+app.use("/api/v1", adminRouter);
 
 
-app.get("/",(req, res) =>{
-    res.send("foodhub server running")
+app.get("/", (req, res) => {
+  res.send("foodhub server running")
 })
 
 app.use(errorHandler);

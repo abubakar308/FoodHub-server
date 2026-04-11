@@ -15,9 +15,15 @@ const getProfile: RequestHandler = async (req, res) => {
 };
 
 const updateProfile: RequestHandler = async (req, res) => {
-
-  console.log(req.body)
-  const user = await userService.updateProfile(req.user?.id as string, req.body);
+console.log("req.user:", req.user);
+console.log("req.body:", req.body);
+  const user = await userService.updateProfile(req.user?.id as string, {
+    name: req.body.name,
+    phone: req.body.phone,
+    avatar: req.body.avatar,
+    bio: req.body.bio,
+    address: req.body.address
+  });
 
   sendResponse(res, {
     statusCode: 200,

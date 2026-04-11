@@ -7,11 +7,11 @@ import { MealController } from "./meal.controller";
 const router = Router();
 
 // PUBLIC
-router.get("/", MealController.getMeals);
-router.get("/:id", MealController.getMeal);
+router.get("/meals", MealController.getMeals);
+router.get("/meals/:id", MealController.getMeal);
 
 router.post(
-  "/",
+  "/meals",
   auth(Role.PROVIDER),
   MealController.createMeal,
 );
@@ -19,13 +19,13 @@ router.post(
 
 
 router.put(
-  "/:id",
+  "/meals/:id",
   auth(Role.PROVIDER),
   MealController.updateMeal,
 );
 
 router.delete(
-  "/:id",
+  "/meals/:id",
   auth(Role.PROVIDER),
   MealController.deleteMeal,
 );

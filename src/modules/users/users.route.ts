@@ -4,7 +4,7 @@ import auth from "../../middleware/auth";
 
 const router = Router();
 
-router.get("/me", auth(), userController.getProfile)
-router.patch("/me", auth(), userController.updateProfile)
+router.get("/users/me", auth(), userController.getProfile)
+router.patch("/users/me", auth(), userController.updateProfile)
 
 export const userRouter: Router =  router;

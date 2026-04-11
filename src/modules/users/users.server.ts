@@ -13,7 +13,7 @@ const getProfile = async (userId: string) => {
   return userWithoutPassword;
 };
 
-const updateProfile = async (userId: string, payload: any) => {
+const updateProfile = async (userId: string, payload: {name?: string, phone?: string, avatar?: string, bio?: string, address?: string}) => {
   const user = await prisma.user.update({
     where: { id: userId },
     data: payload,

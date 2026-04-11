@@ -10,9 +10,9 @@ router.post("/addtocart", auth(Role.CUSTOMER), OrderController.addToCart);
 router.get("/mycart", auth(Role.CUSTOMER), OrderController.getMyCart);
 router.patch("/cart/:id", auth(Role.CUSTOMER), OrderController.updateQuantity)
 
-router.post("/", auth(Role.CUSTOMER), OrderController.createOrder);
-router.get("/", auth(Role.CUSTOMER), OrderController.getMyOrders);
-router.get("/:id", auth(Role.CUSTOMER), OrderController.getOrderById);
+router.post("/orders", auth(Role.CUSTOMER), OrderController.createOrder);
+router.get("/orders", auth(Role.CUSTOMER), OrderController.getMyOrders);
+router.get("/orders/:id", auth(Role.CUSTOMER), OrderController.getOrderById);
 
 
 export const orderRoutes: Router = router;

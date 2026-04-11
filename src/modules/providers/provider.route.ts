@@ -4,20 +4,23 @@ import auth from '../../middleware/auth';
 import { ProviderController } from './provider.controller';
 
 const router = Router()
-router.get("/", ProviderController.getProviders);
-router.get("/:id", ProviderController.getProvider);
+router.get("/providers", ProviderController.getProviders);
+router.get("/providers/:id", ProviderController.getProvider);
 
-router.post("/profile", auth(Role.PROVIDER), ProviderController.createProfile);
-router.get("/dashboard", auth(Role.PROVIDER), ProviderController.getMyProfile);
+router.post("/provider/profile", auth(Role.PROVIDER), ProviderController.createProfile);
+
+router.get("/provider/dashboard", auth(Role.PROVIDER), ProviderController.getMyProfile);
+
+router.patch("/provider/profile", auth(Role.PROVIDER), ProviderController.updateProfile);
 
 router.get(
-  "/orders",
+  "/provider/orders",
   auth(Role.PROVIDER),
   ProviderController.getOrders,
 );
 
 router.patch(
-  "/order/:id",
+  "/provider/order/:id",
   auth(Role.PROVIDER),
   ProviderController.updateOrderStatus,
 );
