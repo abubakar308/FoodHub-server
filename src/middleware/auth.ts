@@ -17,46 +17,54 @@ declare global {
   }
 }
 
-
 const auth = (...roles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-
     const authHeader = req.headers.authorization;
 
-    if (!authHeader) {
+    const bearerToken =
+      authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : null;
+
+    const cookieToken = req.cookies?.token;
+
+    const token = bearerToken || cookieToken;
+
+    if (!token) {
       return res.status(401).json({ message: "Token required" });
     }
 
-    const token = authHeader.startsWith("Bearer")
-      ? authHeader.split(" ")[1]
-      : authHeader;
-
     try {
-      const decoded = jwt.verify(token as string, config.jwtSecret as string) as any;
+      const decoded = jwt.verify(
+        token,
+        config.jwtSecret as string
+      ) as JwtPayload & { id: string; role: string; email: string };
 
       req.user = decoded;
 
       const userData = await prisma.user.findUnique({
-        where:{
-          email:decoded.email
-        }
+        where: {
+          email: decoded.email,
+        },
       });
 
+      if (!userData) {
+        return res.status(401).json({ message: "User not found" });
+      }
+
+      if (userData.status !== "ACTIVE") {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
 
       if (roles.length && !roles.includes(decoded.role)) {
         return res.status(403).json({ message: "Forbidden" });
       }
 
-         if(userData?.status !== "ACTIVE") {
-        throw new Error("Unauthorized!!");
-      }
-
       next();
-    } catch(errror: any) {
-      return res.status(401).json({ message:  errror.message});
+    } catch (error: any) {
+      return res.status(401).json({ message: error.message || "Unauthorized" });
     }
   };
 };
-
 
 export default auth;

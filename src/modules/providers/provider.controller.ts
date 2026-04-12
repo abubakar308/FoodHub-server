@@ -1,12 +1,17 @@
-import { Request, Response } from "express";
+import { Request, RequestHandler, Response } from "express";
 import { ProviderService } from "./provider.service";
+import { uploadToCloudinary } from "../../utils/upload";
+import { IProviderFilesRequest, IProviderProfilePayload } from "./providerr.interface";
 
-const createProfile = async (req: Request, res: Response) => {
+type ProviderFiles = {
+  bannerImage?: Express.Multer.File[];
+  restaurantLogo?: Express.Multer.File[];
+};
+
+const createProfile: RequestHandler = async (req, res) => {
   try {
     const {
       restaurantName,
-      restaurantLogo,
-      bannerImage,
       address,
       phone,
       description,
@@ -16,27 +21,72 @@ const createProfile = async (req: Request, res: Response) => {
       deliveryArea,
     } = req.body;
 
-    if (!restaurantName || !address || !phone) {
+    console.log(req.user)
+
+    if (!restaurantName?.trim() || !address?.trim() || !phone?.trim()) {
       return res.status(400).json({
         success: false,
         message: "restaurantName, address and phone are required",
       });
     }
 
-    const profile = await ProviderService.createProviderProfile(
-      req.user?.id as string,
-      {
-        restaurantName,
-        restaurantLogo,
-        bannerImage,
-        address,
-        phone,
-        description,
-        cuisineType,
-        openingTime,
-        closingTime,
-        deliveryArea,
+    if (!req.user?.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized access",
+      });
+    }
+
+    // ✅ first check DB/business validation before upload
+    const existingProfile = await ProviderService.getMyProviderProfile(req.user.id);
+    if (existingProfile) {
+      return res.status(400).json({
+        success: false,
+        message: "Provider profile already exists",
+      });
+    }
+
+    const files = req.files as
+      | {
+        restaurantLogo?: Express.Multer.File[];
+        bannerImage?: Express.Multer.File[];
       }
+      | undefined;
+
+    let restaurantLogo: string | undefined;
+    let bannerImage: string | undefined;
+
+    if (files?.restaurantLogo?.[0]) {
+      restaurantLogo = await uploadToCloudinary(
+        files.restaurantLogo[0].buffer,
+        "foodhub/providers"
+      );
+    }
+
+    if (files?.bannerImage?.[0]) {
+      bannerImage = await uploadToCloudinary(
+        files.bannerImage[0].buffer,
+        "foodhub/providers"
+      );
+    }
+
+    const payload: IProviderProfilePayload = {
+      restaurantName,
+      address,
+      phone,
+      description,
+      cuisineType,
+      openingTime,
+      closingTime,
+      deliveryArea,
+    };
+
+    if (restaurantLogo) payload.restaurantLogo = restaurantLogo;
+    if (bannerImage) payload.bannerImage = bannerImage;
+
+    const profile = await ProviderService.createProviderProfile(
+      req.user.id,
+      payload
     );
 
     return res.status(201).json({
@@ -45,12 +95,11 @@ const createProfile = async (req: Request, res: Response) => {
       data: profile,
     });
   } catch (error: any) {
+    console.error("CREATE PROVIDER PROFILE ERROR:", error);
+
     return res.status(500).json({
       success: false,
-      message:
-        error.message === "PROVIDER_PROFILE_EXISTS"
-          ? "Provider profile already exists"
-          : "Failed to create profile",
+      message: "Failed to create profile",
       error: error.message,
     });
   }
@@ -218,8 +267,8 @@ const updateOrderStatus = async (req: Request, res: Response) => {
         error.message === "PROVIDER_PROFILE_NOT_FOUND"
           ? "No provider profile found"
           : error.message === "ORDER_NOT_FOUND"
-          ? "Order not found"
-          : "Failed to update order status",
+            ? "Order not found"
+            : "Failed to update order status",
       error: error.message,
     });
   }

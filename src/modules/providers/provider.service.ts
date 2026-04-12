@@ -40,19 +40,20 @@ const createProviderProfile = async (
   }
 
   return prisma.providerProfile.create({
-    data: {
-      userId,
-      restaurantName: payload.restaurantName,
-      address: payload.address,
-      phone: payload.phone,
-      restaurantLogo: payload.restaurantLogo,
-      bannerImage: payload.bannerImage,
-      description: payload.description,
-      cuisineType: payload.cuisineType,
-      openingTime: payload.openingTime,
-      closingTime: payload.closingTime,
-      deliveryArea: payload.deliveryArea,
+    select: {
+      userId: true,
+      restaurantName: true,
+      address: true,
+      phone: true,
+      restaurantLogo: true,
+      bannerImage: true,
+      description: true,
+      cuisineType: true,
+      openingTime: true,
+      closingTime: true,
+      deliveryArea: true,
     },
+    data: { userId, ...payload },
   });
 };
 

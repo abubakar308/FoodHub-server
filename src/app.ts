@@ -18,6 +18,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "https://foodhub-client-six.vercel.app",
+      "https://quickplatter.vercel.app/"
     ],
     credentials: true,
   })

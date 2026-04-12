@@ -1,38 +1,41 @@
 import { RequestHandler } from "express";
 import { userService } from "./users.server";
 import sendResponse from "../../utils/sendResponse";
+import { uploadToCloudinary } from "../../utils/upload";
 
 const getProfile: RequestHandler = async (req, res) => {
 
   const user = await userService.getProfile(req.user?.id as string);
 
- sendResponse(res, {
-  statusCode: 200,
-  success: true,
-  message: "Profile fetched successfully",
-  data: user
- })
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Profile fetched successfully",
+    data: user
+  })
 };
 
+
 const updateProfile: RequestHandler = async (req, res) => {
-console.log("req.user:", req.user);
-console.log("req.body:", req.body);
+  const imageUrl = req.file
+    ? await uploadToCloudinary(req.file.buffer, "foodhub/users")
+    : undefined;
+
   const user = await userService.updateProfile(req.user?.id as string, {
     name: req.body.name,
     phone: req.body.phone,
-    avatar: req.body.avatar,
+    avatar: imageUrl ?? req.body.avatar,
     bio: req.body.bio,
-    address: req.body.address
+    address: req.body.address,
   });
 
   sendResponse(res, {
     statusCode: 200,
     success: true,
     message: "Profile updated successfully",
-    data: user
-  })
+    data: user,
+  });
 };
-
 
 export const userController = {
   getProfile,
