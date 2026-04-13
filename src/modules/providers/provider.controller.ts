@@ -104,6 +104,82 @@ const createProfile: RequestHandler = async (req, res) => {
 };
 
 
+const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const {
+      restaurantName,
+      address,
+      phone,
+      description,
+      cuisineType,
+      openingTime,
+      closingTime,
+      deliveryArea,
+    } = req.body;
+
+    const files = req.files as
+      | {
+        restaurantLogo?: Express.Multer.File[];
+        bannerImage?: Express.Multer.File[];
+      }
+      | undefined;
+ 
+    let restaurantLogo: string | undefined;
+    let bannerImage: string | undefined;
+
+    if (files?.restaurantLogo?.[0]) {
+      restaurantLogo = await uploadToCloudinary(
+        files.restaurantLogo[0].buffer,
+        "foodhub/providers"
+      );
+    }
+
+    if (files?.bannerImage?.[0]) {
+      bannerImage = await uploadToCloudinary(
+        files.bannerImage[0].buffer,
+        "foodhub/providers"
+      );
+    }
+
+    const payload: IProviderProfilePayload = {
+      restaurantName,
+      address,
+      phone,
+      description,
+      cuisineType,
+      openingTime,
+      closingTime,
+      deliveryArea,
+    };
+
+    if (restaurantLogo) payload.restaurantLogo = restaurantLogo;
+    if (bannerImage) payload.bannerImage = bannerImage;
+
+
+    const profile = await ProviderService.updateProviderProfile(
+      req.user?.id as string,
+      payload
+     
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Provider profile updated successfully",
+      data: profile,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message === "PROVIDER_PROFILE_NOT_FOUND"
+          ? "Provider profile not found"
+          : "Failed to update profile",
+      error: error.message,
+    });
+  }
+};
+
+
 const getDashboardStats = async (req: Request, res: Response) => {
   try {
     const result = await ProviderService.getProviderDashboardStats(req.user!.id);
@@ -150,53 +226,6 @@ const getMyProfile = async (req: Request, res: Response) => {
   }
 };
 
-const updateProfile = async (req: Request, res: Response) => {
-  try {
-    const {
-      restaurantName,
-      restaurantLogo,
-      bannerImage,
-      address,
-      phone,
-      description,
-      cuisineType,
-      openingTime,
-      closingTime,
-      deliveryArea,
-    } = req.body;
-
-    const profile = await ProviderService.updateProviderProfile(
-      req.user?.id as string,
-      {
-        restaurantName,
-        restaurantLogo,
-        bannerImage,
-        address,
-        phone,
-        description,
-        cuisineType,
-        openingTime,
-        closingTime,
-        deliveryArea,
-      }
-    );
-
-    return res.status(200).json({
-      success: true,
-      message: "Provider profile updated successfully",
-      data: profile,
-    });
-  } catch (error: any) {
-    return res.status(500).json({
-      success: false,
-      message:
-        error.message === "PROVIDER_PROFILE_NOT_FOUND"
-          ? "Provider profile not found"
-          : "Failed to update profile",
-      error: error.message,
-    });
-  }
-};
 
 const getProviders = async (_req: Request, res: Response) => {
   try {

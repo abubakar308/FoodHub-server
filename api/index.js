@@ -1098,7 +1098,21 @@ router.post("/provider/profile", auth_default(Role.PROVIDER), upload.fields([
 ]), ProviderController.createProfile);
 router.get("/provider/dashboard-stats", auth_default(Role.PROVIDER), ProviderController.getDashboardStats);
 router.get("/provider/dashboard", auth_default(Role.PROVIDER), ProviderController.getMyProfile);
-router.patch("/provider/profile", auth_default(Role.PROVIDER), ProviderController.updateProfile);
+router.patch(
+  "/provider/profile",
+  auth_default(Role.PROVIDER),
+  upload.fields([
+    {
+      name: "restaurantLogo",
+      maxCount: 1
+    },
+    {
+      name: "bannerImage",
+      maxCount: 1
+    }
+  ]),
+  ProviderController.updateProfile
+);
 router.get(
   "/provider/orders",
   auth_default(Role.PROVIDER),
