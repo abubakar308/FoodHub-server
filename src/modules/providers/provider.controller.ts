@@ -21,8 +21,6 @@ const createProfile: RequestHandler = async (req, res) => {
       deliveryArea,
     } = req.body;
 
-    console.log(req.user)
-
     if (!restaurantName?.trim() || !address?.trim() || !phone?.trim()) {
       return res.status(400).json({
         success: false,
@@ -104,6 +102,29 @@ const createProfile: RequestHandler = async (req, res) => {
     });
   }
 };
+
+
+const getDashboardStats = async (req: Request, res: Response) => {
+  try {
+    const result = await ProviderService.getProviderDashboardStats(req.user!.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Provider dashboard stats fetched successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message === "PROVIDER_PROFILE_NOT_FOUND"
+          ? "Provider profile not found"
+          : "Failed to fetch provider dashboard stats",
+      error: error.message,
+    });
+  }
+};
+
 
 const getMyProfile = async (req: Request, res: Response) => {
   try {
@@ -222,6 +243,14 @@ const getOrders = async (req: Request, res: Response) => {
   try {
     const orders = await ProviderService.getProviderOrders(req.user!.id);
 
+    if (!orders) {
+      return res.status(404).json({
+        success: false,
+        message: "No orders found",
+      });
+    }
+    console.log(req.user);
+
     return res.status(200).json({
       success: true,
       data: orders,
@@ -282,4 +311,5 @@ export const ProviderController = {
   getProvider,
   getOrders,
   updateOrderStatus,
+  getDashboardStats
 };

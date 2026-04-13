@@ -10,6 +10,7 @@ import { errorHandler } from "./middleware/globalErrorHandler";
 import { notFound } from "./middleware/notFound";
 import { authRouter } from "./modules/auth/auth.route";
 import { userRouter } from "./modules/users/users.route";
+import { AiRoutes } from "./modules/ai/ai.route";
 
 const app = express();
 
@@ -18,7 +19,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "https://foodhub-client-six.vercel.app",
-      "https://quickplatter.vercel.app/"
+      "https://quickplatter.vercel.app"
     ],
     credentials: true,
   })
@@ -35,6 +36,7 @@ app.use("/api/v1", categoryRoutes);
 app.use("/api/v1", orderRoutes);
 app.use("/api/v1", reviewRoutes)
 app.use("/api/v1", adminRouter);
+app.use("/api/v1", AiRoutes);
 
 
 app.get("/", (req, res) => {

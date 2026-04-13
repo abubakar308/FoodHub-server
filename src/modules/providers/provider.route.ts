@@ -19,6 +19,8 @@ router.post("/provider/profile", auth(Role.PROVIDER), upload.fields([
   }
 ]), ProviderController.createProfile);
 
+router.get("/provider/dashboard-stats", auth(Role.PROVIDER), ProviderController.getDashboardStats);
+
 router.get("/provider/dashboard", auth(Role.PROVIDER), ProviderController.getMyProfile);
 
 router.patch("/provider/profile", auth(Role.PROVIDER), ProviderController.updateProfile);

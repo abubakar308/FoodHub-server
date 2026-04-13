@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { MealService } from "./meal.service";
 import { prisma } from "../../lib/prisma";
+import { uploadToCloudinary } from "../../utils/upload";
 
 const createMeal = async (req: Request, res: Response) => {
   try {
@@ -11,7 +12,6 @@ const createMeal = async (req: Request, res: Response) => {
       ingredients,
       price,
       discountPrice,
-      imageUrl,
       categoryId,
       isAvailable,
       isFeatured,
@@ -27,27 +27,57 @@ const createMeal = async (req: Request, res: Response) => {
       });
     }
 
+    const imageUrl = req.file
+      ? await uploadToCloudinary(req.file.buffer, "foodhub/users")
+      : undefined;
+
+    if (!imageUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Image is required",
+      });
+    }
+
+    const provider = await prisma.providerProfile.findUnique({
+      where: { userId: req.user!.id },
+      select: { id: true, isApproved: true },
+    });
+
+    if (!provider) {
+      return res.status(404).json({
+        success: false,
+        message: "Provider profile not found",
+      });
+    }
+
+    if (!provider.isApproved) {
+      return res.status(403).json({
+        success: false,
+        message: "Provider is not approved yet",
+      });
+    }
+
     const mealPayload = {
-  title,
-  shortDescription,
-  description,
-  ingredients,
-  price: Number(price),
-  imageUrl,
-  categoryId,
-  isAvailable,
-  isFeatured,
-  tags,
-  ...(discountPrice !== undefined && {
-    discountPrice: Number(discountPrice),
-  }),
-  ...(preparationTime !== undefined && {
-    preparationTime: Number(preparationTime),
-  }),
-  ...(calories !== undefined && {
-    calories: Number(calories),
-  }),
-};
+      title,
+      shortDescription,
+      description,
+      ingredients,
+      price: Number(price),
+      imageUrl,
+      categoryId,
+      isAvailable,
+      isFeatured,
+      tags,
+      ...(discountPrice !== undefined && {
+        discountPrice: Number(discountPrice),
+      }),
+      ...(preparationTime !== undefined && {
+        preparationTime: Number(preparationTime),
+      }),
+      ...(calories !== undefined && {
+        calories: Number(calories),
+      }),
+    };
 
     const meal = await MealService.createMeal(req.user!.id, mealPayload);
 
@@ -63,10 +93,10 @@ const createMeal = async (req: Request, res: Response) => {
         error.message === "PROVIDER_PROFILE_NOT_FOUND"
           ? "Provider profile not found"
           : error.message === "PROVIDER_NOT_APPROVED"
-          ? "Provider is not approved yet"
-          : error.message === "CATEGORY_NOT_FOUND"
-          ? "Category not found"
-          : "Failed to create meal",
+            ? "Provider is not approved yet"
+            : error.message === "CATEGORY_NOT_FOUND"
+              ? "Category not found"
+              : "Failed to create meal",
       error: error.message,
     });
   }
@@ -76,7 +106,7 @@ const createMeal = async (req: Request, res: Response) => {
 const getMeals = async (req: Request, res: Response) => {
   try {
     const meals = await MealService.getMeals(
-    req.query as any
+      req.query as any
     );
 
     return res.status(200).json({
@@ -188,12 +218,12 @@ const updateMeal = async (req: Request, res: Response) => {
         error.message === "PROVIDER_PROFILE_NOT_FOUND"
           ? "Provider profile not found"
           : error.message === "MEAL_NOT_FOUND"
-          ? "Meal not found"
-          : error.message === "UNAUTHORIZED_UPDATE"
-          ? "You are not authorized to update this meal"
-          : error.message === "CATEGORY_NOT_FOUND"
-          ? "Category not found"
-          : "Failed to update meal",
+            ? "Meal not found"
+            : error.message === "UNAUTHORIZED_UPDATE"
+              ? "You are not authorized to update this meal"
+              : error.message === "CATEGORY_NOT_FOUND"
+                ? "Category not found"
+                : "Failed to update meal",
       error: error.message,
     });
   }
@@ -219,10 +249,10 @@ const deleteMeal = async (req: Request, res: Response) => {
         error.message === "PROVIDER_PROFILE_NOT_FOUND"
           ? "Provider profile not found"
           : error.message === "MEAL_NOT_FOUND"
-          ? "Meal not found"
-          : error.message === "UNAUTHORIZED_DELETE"
-          ? "You are not authorized to delete this meal"
-          : "Meal deletion failed",
+            ? "Meal not found"
+            : error.message === "UNAUTHORIZED_DELETE"
+              ? "You are not authorized to delete this meal"
+              : "Meal deletion failed",
       error: error.message,
     });
   }

@@ -57,6 +57,241 @@ const createProviderProfile = async (
   });
 };
 
+const getProviderDashboardStats = async (userId: string) => {
+  const provider = await prisma.providerProfile.findUnique({
+    where: { userId },
+    select: {
+      id: true,
+      restaurantName: true,
+    },
+  });
+
+  if (!provider) {
+    throw new Error("PROVIDER_PROFILE_NOT_FOUND");
+  }
+
+  const providerId = provider.id;
+
+  const [
+    totalMeals,
+    totalOrders,
+    pendingOrders,
+    preparingOrders,
+    readyOrders,
+    deliveredOrders,
+    cancelledOrders,
+    revenueAgg,
+    recentOrders,
+    providerMeals,
+  ] = await Promise.all([
+    prisma.meal.count({
+      where: { providerId },
+    }),
+
+    prisma.order.count({
+      where: { providerId },
+    }),
+
+    prisma.order.count({
+      where: { providerId, status: "PLACED" },
+    }),
+
+    prisma.order.count({
+      where: { providerId, status: "PREPARING" },
+    }),
+
+    prisma.order.count({
+      where: { providerId, status: "READY" },
+    }),
+
+    prisma.order.count({
+      where: { providerId, status: "DELIVERED" },
+    }),
+
+    prisma.order.count({
+      where: { providerId, status: "CANCELLED" },
+    }),
+
+    prisma.order.aggregate({
+      where: {
+        providerId,
+        status: "DELIVERED",
+      },
+      _sum: {
+        totalPrice: true,
+      },
+    }),
+
+    prisma.order.findMany({
+      where: { providerId },
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        items: {
+          include: {
+            meal: {
+              select: {
+                id: true,
+                title: true,
+                imageUrl: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+
+    prisma.meal.findMany({
+      where: { providerId },
+      select: {
+        id: true,
+        title: true,
+        averageRating: true,
+        totalReviews: true,
+        orderItems: {
+          select: {
+            quantity: true,
+            price: true,
+          },
+        },
+      },
+    }),
+  ]);
+
+  const totalReviews = providerMeals.reduce(
+    (sum, meal) => sum + (meal.totalReviews || 0),
+    0
+  );
+
+  const totalRatingValue = providerMeals.reduce(
+    (sum, meal) => sum + (meal.averageRating || 0) * (meal.totalReviews || 0),
+    0
+  );
+
+  const averageRating =
+    totalReviews > 0 ? Number((totalRatingValue / totalReviews).toFixed(1)) : 0;
+
+  const orderStatusDistribution = [
+    { status: "PLACED", count: pendingOrders },
+    { status: "PREPARING", count: preparingOrders },
+    { status: "READY", count: readyOrders },
+    { status: "DELIVERED", count: deliveredOrders },
+    { status: "CANCELLED", count: cancelledOrders },
+  ];
+
+  const monthlyBase = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - (5 - index));
+    return {
+      key: `${date.getFullYear()}-${date.getMonth()}`,
+      month: date.toLocaleString("en-US", { month: "short" }),
+      year: date.getFullYear(),
+      count: 0,
+      revenue: 0,
+    };
+  });
+
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+  sixMonthsAgo.setDate(1);
+  sixMonthsAgo.setHours(0, 0, 0, 0);
+
+  const ordersForCharts = await prisma.order.findMany({
+    where: {
+      providerId,
+      createdAt: {
+        gte: sixMonthsAgo,
+      },
+    },
+    select: {
+      createdAt: true,
+      totalPrice: true,
+      status: true,
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+  });
+
+  for (const order of ordersForCharts) {
+    const date = new Date(order.createdAt);
+    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    const found = monthlyBase.find((item) => item.key === key);
+
+    if (found) {
+      found.count += 1;
+      if (order.status === "DELIVERED") {
+        found.revenue += Number(order.totalPrice || 0);
+      }
+    }
+  }
+
+  const monthlyOrders = monthlyBase.map((item) => ({
+    month: item.month,
+    count: item.count,
+  }));
+
+  const monthlyRevenue = monthlyBase.map((item) => ({
+    month: item.month,
+    revenue: item.revenue,
+  }));
+
+  const topMeals = providerMeals
+    .map((meal) => {
+      const totalSold = meal.orderItems.reduce(
+        (sum, item) => sum + item.quantity,
+        0
+      );
+
+      const revenue = meal.orderItems.reduce(
+        (sum, item) => sum + Number(item.price) * item.quantity,
+        0
+      );
+
+      return {
+        mealId: meal.id,
+        title: meal.title,
+        totalSold,
+        revenue,
+        averageRating: meal.averageRating || 0,
+        totalReviews: meal.totalReviews || 0,
+      };
+    })
+    .sort((a, b) => b.totalSold - a.totalSold)
+    .slice(0, 5);
+
+  return {
+    provider: {
+      id: provider.id,
+      restaurantName: provider.restaurantName,
+    },
+    overview: {
+      totalMeals,
+      totalOrders,
+      pendingOrders,
+      preparingOrders,
+      readyOrders,
+      deliveredOrders,
+      cancelledOrders,
+      totalRevenue: Number(revenueAgg._sum.totalPrice || 0),
+      totalReviews,
+      averageRating,
+    },
+    orderStatusDistribution,
+    monthlyOrders,
+    monthlyRevenue,
+    topMeals,
+    recentOrders,
+  };
+};
+
 const getMyProviderProfile = async (userId: string) => {
   return prisma.providerProfile.findUnique({
     where: { userId },
@@ -161,6 +396,7 @@ const getProviderById = async (id: string) => {
   });
 };
 
+
 const getProviderOrders = async (userId: string) => {
   const providerProfile = await prisma.providerProfile.findUnique({
     where: { userId },
@@ -181,6 +417,7 @@ const getProviderOrders = async (userId: string) => {
     orderBy: { createdAt: "desc" },
   });
 };
+
 
 const updateOrderStatus = async (
   orderId: string,
@@ -220,4 +457,5 @@ export const ProviderService = {
   getProviderById,
   getProviderOrders,
   updateOrderStatus,
+  getProviderDashboardStats,
 };
