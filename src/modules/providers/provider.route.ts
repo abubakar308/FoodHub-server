@@ -23,7 +23,18 @@ router.get("/provider/dashboard-stats", auth(Role.PROVIDER), ProviderController.
 
 router.get("/provider/dashboard", auth(Role.PROVIDER), ProviderController.getMyProfile);
 
-router.patch("/provider/profile", auth(Role.PROVIDER), ProviderController.updateProfile);
+router.patch("/provider/profile", auth(Role.PROVIDER), 
+upload.fields([
+  {
+    name: "restaurantLogo",
+    maxCount: 1
+  },
+  {
+    name: "bannerImage",
+    maxCount: 1
+  }
+]),
+ ProviderController.updateProfile);
 
 router.get(
   "/provider/orders",
