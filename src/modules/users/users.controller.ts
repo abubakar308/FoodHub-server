@@ -37,7 +37,25 @@ const updateProfile: RequestHandler = async (req, res) => {
   });
 };
 
+export const getDashboardStats: RequestHandler = async (req, res) => {
+  try {
+    const result = await userService.getCustomerDashboardStats(req.user!.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Customer dashboard stats fetched successfully",
+      data: result,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to fetch customer dashboard stats",
+    });
+  }
+};
+
 export const userController = {
   getProfile,
-  updateProfile
+  updateProfile,
+  getDashboardStats
 };

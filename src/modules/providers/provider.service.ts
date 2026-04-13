@@ -329,18 +329,7 @@ const updateProviderProfile = async (
 
   return prisma.providerProfile.update({
     where: { userId },
-    data: {
-      restaurantName: payload.restaurantName,
-      restaurantLogo: payload.restaurantLogo,
-      bannerImage: payload.bannerImage,
-      address: payload.address,
-      phone: payload.phone,
-      description: payload.description,
-      cuisineType: payload.cuisineType,
-      openingTime: payload.openingTime,
-      closingTime: payload.closingTime,
-      deliveryArea: payload.deliveryArea,
-    },
+    data: payload,
   });
 };
 

@@ -669,18 +669,7 @@ var updateProviderProfile = async (userId, payload) => {
   }
   return prisma.providerProfile.update({
     where: { userId },
-    data: {
-      restaurantName: payload.restaurantName,
-      restaurantLogo: payload.restaurantLogo,
-      bannerImage: payload.bannerImage,
-      address: payload.address,
-      phone: payload.phone,
-      description: payload.description,
-      cuisineType: payload.cuisineType,
-      openingTime: payload.openingTime,
-      closingTime: payload.closingTime,
-      deliveryArea: payload.deliveryArea
-    }
+    data: payload
   });
 };
 var getAllProviders = async () => {
@@ -888,6 +877,62 @@ var createProfile = async (req, res) => {
     });
   }
 };
+var updateProfile = async (req, res) => {
+  try {
+    const {
+      restaurantName,
+      address,
+      phone,
+      description,
+      cuisineType,
+      openingTime,
+      closingTime,
+      deliveryArea
+    } = req.body;
+    const files = req.files;
+    let restaurantLogo;
+    let bannerImage;
+    if (files?.restaurantLogo?.[0]) {
+      restaurantLogo = await uploadToCloudinary(
+        files.restaurantLogo[0].buffer,
+        "foodhub/providers"
+      );
+    }
+    if (files?.bannerImage?.[0]) {
+      bannerImage = await uploadToCloudinary(
+        files.bannerImage[0].buffer,
+        "foodhub/providers"
+      );
+    }
+    const payload = {
+      restaurantName,
+      address,
+      phone,
+      description,
+      cuisineType,
+      openingTime,
+      closingTime,
+      deliveryArea
+    };
+    if (restaurantLogo) payload.restaurantLogo = restaurantLogo;
+    if (bannerImage) payload.bannerImage = bannerImage;
+    const profile = await ProviderService.updateProviderProfile(
+      req.user?.id,
+      payload
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Provider profile updated successfully",
+      data: profile
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message === "PROVIDER_PROFILE_NOT_FOUND" ? "Provider profile not found" : "Failed to update profile",
+      error: error.message
+    });
+  }
+};
 var getDashboardStats = async (req, res) => {
   try {
     const result = await ProviderService.getProviderDashboardStats(req.user.id);
@@ -921,48 +966,6 @@ var getMyProfile = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to get provider profile",
-      error: error.message
-    });
-  }
-};
-var updateProfile = async (req, res) => {
-  try {
-    const {
-      restaurantName,
-      restaurantLogo,
-      bannerImage,
-      address,
-      phone,
-      description,
-      cuisineType,
-      openingTime,
-      closingTime,
-      deliveryArea
-    } = req.body;
-    const profile = await ProviderService.updateProviderProfile(
-      req.user?.id,
-      {
-        restaurantName,
-        restaurantLogo,
-        bannerImage,
-        address,
-        phone,
-        description,
-        cuisineType,
-        openingTime,
-        closingTime,
-        deliveryArea
-      }
-    );
-    return res.status(200).json({
-      success: true,
-      message: "Provider profile updated successfully",
-      data: profile
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message === "PROVIDER_PROFILE_NOT_FOUND" ? "Provider profile not found" : "Failed to update profile",
       error: error.message
     });
   }
